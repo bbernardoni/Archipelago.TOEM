@@ -36,7 +36,7 @@ public class HUD : MonoBehaviour
                 return;
             }
 
-            GUI.BeginGroup(new(Screen.width - 304, Screen.height - 52, 304, 48));
+            GUI.BeginGroup(new(4, 4, 304, 48));
             GUI.Box(new(0, 0, 300, 48), "");
             GUI.Label(new(4, 0, 300, 20), $"{ModDisplayInfo} (F1 for Debug)");
             GUI.Label(new(4, 24, 300, 20), "Archipelago Status: Connected");
@@ -44,7 +44,7 @@ public class HUD : MonoBehaviour
             return;
         }
 
-        GUI.BeginGroup(new(Screen.width - 308, Screen.height - 132, 308, 128));
+        GUI.BeginGroup(new(4, 4, 308, 128));
 
         GUI.Box(new(0, 0, 300, 124), "");
 

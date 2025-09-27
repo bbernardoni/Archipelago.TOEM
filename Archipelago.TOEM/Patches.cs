@@ -1,20 +1,39 @@
 using HarmonyLib;
 using Photographing;
 using Quests;
+using Dialogue;
 
 namespace Archipelago.TOEM;
 
 [HarmonyPatch(typeof(CommunityController))]
 internal class CommunityController_Patch
 {
-    [HarmonyPatch(nameof(CommunityController.SpawnStamp))]
+    static bool resetOnMenuRemoved = false;
+
+    [HarmonyPatch(nameof(CommunityController.GetStamp))]
     [HarmonyPrefix]
-    public static void SpawnStamp()
+    public static bool GetStamp(Quest completedQuest)
     {
-        Plugin.Logger.LogInfo($"CommunityController.SpawnStamp({Plugin.Game.LastUpdatedQuest})");
-        if (Plugin.Client.Connected && Plugin.Game.LastUpdatedQuest != null && Data.QuestToApLocationId.TryGetValue(Plugin.Game.LastUpdatedQuest, out var apLocation))
+        Plugin.Logger.LogInfo($"CommunityController.GetStamp({completedQuest})");
+        if (Plugin.Client.Connected && Data.QuestToApLocationId.TryGetValue(completedQuest.jsonSaveKey, out var apLocation))
         {
             Plugin.Client.SendLocation((long)apLocation);
+        }
+        var node = TextboxController.currentDialogueGraph.currentNode;
+        node.TryCast<SetQuestStatusNode>().ProceedAfterStampingCard();
+        // Delegate isn't setup until after this call. Delay removing until next Update prefix.
+        resetOnMenuRemoved = true;
+        return false;
+    }
+
+    [HarmonyPatch(nameof(CommunityController.Update))]
+    [HarmonyPrefix]
+    public static void Update()
+    {
+        if (resetOnMenuRemoved)
+        {
+            CommunityController.instance.onMenuRemovedFromStack = null;
+            resetOnMenuRemoved = false;
         }
     }
 }
@@ -110,12 +129,32 @@ internal class PlayerInventory_Patch
 {
     [HarmonyPatch(nameof(PlayerInventory.AddItem))]
     [HarmonyPrefix]
-    public static void AddItem(Item_SO itemToAdd, int count, bool addedFromSaveFile)
+    public static bool AddItem(Item_SO itemToAdd, int count, bool addedFromSaveFile)
     {
         Plugin.Logger.LogInfo($"PlayerInventory.AddItem({itemToAdd.jsonSaveKey}, {count}, {addedFromSaveFile})");
-        if (Plugin.Client.Connected && Data.ItemToApLocationId.TryGetValue(itemToAdd.jsonSaveKey, out var apLocation))
+        bool itemFound = Data.ItemToApLocationId.TryGetValue(itemToAdd.jsonSaveKey, out var apLocation);
+        if (!Plugin.Game.IsServerItem && Plugin.Client.Connected && itemFound)
         {
             Plugin.Client.SendLocation((long)apLocation);
+        }
+        bool continueFunction = Plugin.Game.IsServerItem || !itemFound;
+        Plugin.Game.IsServerItem = false;
+        return continueFunction;
+    }
+}
+
+[HarmonyPatch(typeof(GetItemScreen))]
+internal class GetItemScreen_Patch
+{
+    [HarmonyPatch(nameof(GetItemScreen.CheckCloseMenu))]
+    [HarmonyPostfix]
+    public static void CheckCloseMenu()
+    {
+        var equipmentPrompt = GetItemScreen.instance.equipmentPrompt;
+        if (equipmentPrompt.active)
+        {
+            MenuManager.Instance.CloseMenu();
+            equipmentPrompt.SetActive(false);
         }
     }
 }

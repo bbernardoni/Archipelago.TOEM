@@ -51,5 +51,11 @@
     <Reference Include="UnityEngine.TextRenderingModule">
       <HintPath>lib/UnityEngine.TextRenderingModule.dll</HintPath>
     </Reference>
+    <Reference Include="XNode">
+      <HintPath>lib/XNode.dll</HintPath>
+    </Reference>
+    <Reference Include="SuperTextMesh">
+      <HintPath>lib/SuperTextMesh.dll</HintPath>
+    </Reference>
   </ItemGroup>
 </Project>

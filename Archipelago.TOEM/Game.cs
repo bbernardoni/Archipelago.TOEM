@@ -11,8 +11,10 @@ public class Game
 
     public Queue<ApItemInfo> IncomingItems { get; private set; } = new();
     public Queue<ApItemInfo> IncomingMessages { get; private set; } = new();
-    public string LastUpdatedQuest { get; set; }
+    public List<long> OutgoingLocations { get; private set; } = new();
+    public bool PendingCompletion { get; private set; } = false;
     public bool IsServerItem { get; set; } = false;
+    public bool UnlockRegions { get; set; } = false;
 
     public void Update()
     {
@@ -28,6 +30,23 @@ public class Game
                 GiveItem(item);
             }
         }
+        if (UnlockRegions && GameManager.instance.regionData.regionInfo.Count > 0)
+        {
+            foreach (var region in GameManager.instance.regionData.regionInfo)
+            {
+                Plugin.Logger.LogInfo($"Setting {region.Name} unlocked");
+                region.isUnlocked = true;
+            }
+            UnlockRegions = false;
+        }
+        if (Plugin.Client.Connected)
+        {
+            SyncLocations();
+            if (PendingCompletion)
+            {
+                Plugin.Client.SendCompletion();
+            }
+        }
     }
 
     public void LoadSave() { }
@@ -37,21 +56,42 @@ public class Game
         Plugin.State.ClearSave();
     }
 
-    public void ConnectSave() { }
+    public void ConnectSave()
+    {
+        UnlockRegions = true;
+        SyncLocations();
+    }
+
+    private void SyncLocations()
+    {
+        if (OutgoingLocations.Count == 0)
+            return;
+            
+        bool include_basto = Plugin.State.SlotData?.Options.Include_Basto ?? true;
+        bool include_items = Plugin.State.SlotData?.Options.Include_Items ?? true;
+        Predicate<long> filter = loc =>
+            (!include_basto && loc >= (long)ApLocationId.FirstBasto) ||
+            (!include_items && Data.ItemToApLocationId.ContainsValue((ApLocationId)loc));
+        OutgoingLocations.RemoveAll(filter);
+        // TODO reward items that were filtered out
+
+        Plugin.Client.SyncLocations(OutgoingLocations);
+        OutgoingLocations.Clear();
+    }
 
     private void GiveItem(ApItemInfo itemInfo)
     {
         var apItemId = (ApItemId)itemInfo.Id;
         Plugin.Logger.LogDebug($"Got item {apItemId}");
-        if (apItemId <= ApItemId.StampBasto)
+        if (apItemId <= ApItemId.LastStamp)
         {
             GiveStamp(Data.ApItemIdToQuestRegion[apItemId]);
         }
-        else if (apItemId <= ApItemId.PhotoWaterStrider)
+        else if (apItemId <= ApItemId.LastPhoto)
         {
             // GivePhoto
         }
-        else if (apItemId <= ApItemId.Beret)
+        else if (apItemId <= ApItemId.LastItem)
         {
             GiveGameItem(Data.ApItemIdToItem[apItemId]);
         }
@@ -85,6 +125,34 @@ public class Game
     {
         var item = GameManager.ItemDatabase.GetItemByName(itemName);
         IsServerItem = true;
-        GameManager.PlayerInventory.AddItem(item);
+        if (itemName == "MiniGame Ticket")
+            GameManager.PlayerInventory.AddItem(item, 6);
+        else
+            GameManager.PlayerInventory.AddItem(item);
+        IsServerItem = false;
+    }
+
+    public void CheckLocation(ApLocationId location)
+    {
+        if (Plugin.Client.Connected)
+        {
+            Plugin.Client.SendLocation((long)location);
+        }
+        else
+        {
+            OutgoingLocations.Add((long)location);
+        }
+    }
+
+    public void SendCompletion()
+    {
+        if (Plugin.Client.Connected)
+        {
+            Plugin.Client.SendCompletion();
+        }
+        else
+        {
+            PendingCompletion = true;
+        }
     }
 }

@@ -6,6 +6,7 @@ using Archipelago.MultiClient.Net;
 using Archipelago.MultiClient.Net.Enums;
 using Archipelago.MultiClient.Net.Helpers;
 using Archipelago.MultiClient.Net.MessageLog.Messages;
+using UniverseLib;
 
 namespace Archipelago.TOEM.Client;
 
@@ -120,14 +121,12 @@ public class Client
         {
             Plugin.Logger.LogError(e.ToString());
         }
-
-        Disconnect();
     }
 
     public static void Session_OnMessageReceived(LogMessage message)
     {
         Plugin.Logger.LogMessage(message);
-        ClientConsole.LogMessage(message.ToString());
+        OldClientConsole.LogMessage(message.ToString());
     }
 
     public void SendLocation(long location)
@@ -211,7 +210,7 @@ public class Client
 
     public void Session_ItemReceived(IReceivedItemsHelper helper)
     {
-        var index = helper.Index - 1;
+        var index = helper.Index;
         var item = helper.DequeueItem();
         var itemName = item.ItemDisplayName;
         Plugin.Logger.LogInfo($"Received item #{index}: {item.ItemId} - {itemName}");

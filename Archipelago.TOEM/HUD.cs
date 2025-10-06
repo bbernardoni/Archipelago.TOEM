@@ -1,18 +1,20 @@
 using System;
 using Archipelago.TOEM.Client;
 using UnityEngine;
+using UnityEngine.UI;
+using UniverseLib;
+using UniverseLib.UI;
+using UniverseLib.Utility;
 
 namespace Archipelago.TOEM;
 
-public class HUD : MonoBehaviour
+public class OldHUD : MonoBehaviour
 {
     public const string ModDisplayInfo = $"{MyPluginInfo.PLUGIN_NAME} v{MyPluginInfo.PLUGIN_VERSION}";
 
-    public static bool ConnectionFocused { get; private set; }
-
     public static void Initialize(Plugin plugin)
     {
-        var component = plugin.AddComponent<HUD>();
+        var component = plugin.AddComponent<OldHUD>();
         component.hideFlags = HideFlags.HideAndDontSave;
         DontDestroyOnLoad(component.gameObject);
         Cursor.visible = true;
@@ -20,74 +22,182 @@ public class HUD : MonoBehaviour
 
     private void Start()
     {
-        ClientConsole.Awake();
+        OldClientConsole.Awake();
     }
 
     private void OnGUI()
     {
-        ClientConsole.OnGUI();
+        OldClientConsole.OnGUI();
+    }
+}
 
-        if (Plugin.Client.Connected)
+public class HUD : UniverseLib.UI.Panels.PanelBase
+{
+    public const string ModDisplayInfo = $"{MyPluginInfo.PLUGIN_NAME} v{MyPluginInfo.PLUGIN_VERSION}";
+
+    public static UIBase UiBase { get; private set; }
+
+    public static void Initialize()
+    {
+        /*
+        var component = plugin.AddComponent<HUD>();
+        component.hideFlags = HideFlags.HideAndDontSave;
+        DontDestroyOnLoad(component.gameObject);
+        Cursor.visible = true;
+        */
+        Universe.Init(LateInit, Log);
+    }
+
+    static void LateInit()
+    {
+        UiBase = UniversalUI.RegisterUI(MyPluginInfo.PLUGIN_GUID, UiUpdate);
+        HUD HUDPanel = new(UiBase);
+        //ClientConsole ClientPanel = new(UiBase);
+    }
+
+    static void UiUpdate()
+    {
+        // Called once per frame when your UI is being displayed.
+    }
+
+    public HUD(UIBase owner) : base(owner) { }
+
+    public override string Name => "Connection Info";
+    public override int MinWidth => 300;
+    public override int MinHeight => 48;
+    public override Vector2 DefaultAnchorMin => new(0f, 0.85f);
+    public override Vector2 DefaultAnchorMax => new(0.15f, 1f);
+    public override bool CanDragAndResize => false;
+
+    private GameObject ConnectedUIObject;
+    private GameObject DisconnectedUIObject;
+
+    protected override void ConstructPanelContent()
+    {
+        UIRoot.GetComponent<Image>().enabled = false;
+        UIRoot.GetComponent<VerticalLayoutGroup>().childForceExpandHeight = false;
+        ContentRoot.GetComponent<Image>().color = new(0f, 0f, 0f, 0.5f);
+        ContentRoot.GetComponent<VerticalLayoutGroup>().padding = new(10, 10, 10, 10);
+        ContentRoot.GetComponent<VerticalLayoutGroup>().spacing = 5;
+        ContentRoot.GetComponent<LayoutElement>().flexibleHeight = 0;
+        ContentRoot.GetComponent<RectTransform>().pivot = new(0f, 1f);
+
+        Text modDisplayInfoText = UIFactory.CreateLabel(ContentRoot, "ModDisplayInfo", ModDisplayInfo, TextAnchor.MiddleCenter);
+        UIFactory.SetLayoutElement(modDisplayInfoText.gameObject, flexibleWidth: 9999);
+
+        ConnectedUIObject = UIFactory.CreateVerticalGroup(ContentRoot, "ConnectedUI", false, false, true, true, 5);
+        ConnectedUIObject.GetComponent<Image>().enabled = false;
+        ConnectedUIObject.SetActive(false);
+        UIFactory.SetLayoutElement(ConnectedUIObject.gameObject);
+        Text connectedText = UIFactory.CreateLabel(ConnectedUIObject, "Status", "Archipelago Status: Connected");
+        UIFactory.SetLayoutElement(connectedText.gameObject);
+
+        DisconnectedUIObject = UIFactory.CreateVerticalGroup(ContentRoot, "DisconnectedUI", false, false, true, true, 5);
+        DisconnectedUIObject.GetComponent<Image>().enabled = false;
+        UIFactory.SetLayoutElement(DisconnectedUIObject);
+        Text disconnectedText = UIFactory.CreateLabel(DisconnectedUIObject, "Status", "Archipelago Status: Disconnected");
+        UIFactory.SetLayoutElement(disconnectedText.gameObject);
+
+        var hostGroup = UIFactory.CreateHorizontalGroup(DisconnectedUIObject, "HostGroup", false, false, true, true, 5, childAlignment: TextAnchor.MiddleLeft);
+        hostGroup.GetComponent<Image>().enabled = false;
+        UIFactory.SetLayoutElement(hostGroup, flexibleWidth: 9999);
+        Text hostText = UIFactory.CreateLabel(hostGroup, "HostText", "Host: ");
+        UIFactory.SetLayoutElement(hostText.gameObject);
+        var hostInput = UIFactory.CreateInputField(hostGroup, "HostInput", "hostname");
+        hostInput.UIRoot.transform.GetChild(0).GetComponent<RectTransform>().anchoredPosition = new(5, 0);
+        UIFactory.SetLayoutElement(hostInput.UIRoot, minHeight: 20, flexibleWidth: 9999);
+        hostInput.Component.text = Plugin.State.Uri;
+        hostInput.Component.GetOnEndEdit().AddListener(OnHostInput);
+
+        var playerNameGroup = UIFactory.CreateHorizontalGroup(DisconnectedUIObject, "PlayerNameGroup", false, false, true, true, 5, childAlignment: TextAnchor.MiddleLeft);
+        playerNameGroup.GetComponent<Image>().enabled = false;
+        UIFactory.SetLayoutElement(playerNameGroup, flexibleWidth: 9999);
+        Text playerNameText = UIFactory.CreateLabel(playerNameGroup, "PlayerNameText", "Player Name: ");
+        UIFactory.SetLayoutElement(playerNameText.gameObject);
+        var playerNameInput = UIFactory.CreateInputField(playerNameGroup, "PlayerNameInput", "player name");
+        playerNameInput.UIRoot.transform.GetChild(0).GetComponent<RectTransform>().anchoredPosition = new(5, 0);
+        UIFactory.SetLayoutElement(playerNameInput.UIRoot, minHeight: 20, flexibleWidth: 9999);
+        playerNameInput.Component.text = Plugin.State.SlotName;
+        playerNameInput.Component.GetOnEndEdit().AddListener(OnPlayerNameInput);
+
+        var passwordGroup = UIFactory.CreateHorizontalGroup(DisconnectedUIObject, "PasswordGroup", false, false, true, true, 5, childAlignment: TextAnchor.MiddleLeft);
+        passwordGroup.GetComponent<Image>().enabled = false;
+        UIFactory.SetLayoutElement(passwordGroup, flexibleWidth: 9999);
+        Text passwordText = UIFactory.CreateLabel(passwordGroup, "PasswordText", "Password: ");
+        UIFactory.SetLayoutElement(passwordText.gameObject);
+        var passwordInput = UIFactory.CreateInputField(passwordGroup, "PasswordInput", "password");
+        passwordInput.UIRoot.transform.GetChild(0).GetComponent<RectTransform>().anchoredPosition = new(5, 0);
+        passwordInput.Component.contentType = InputField.ContentType.Password;
+        UIFactory.SetLayoutElement(passwordInput.UIRoot, minHeight: 20, flexibleWidth: 9999);
+        passwordInput.Component.text = Plugin.State.Password;
+        passwordInput.Component.GetOnEndEdit().AddListener(OnPasswordInput);
+
+        var connectButton = UIFactory.CreateButton(DisconnectedUIObject, "ConnectButton", "Connect");
+        UIFactory.SetLayoutElement(connectButton.GameObject, minHeight: 25, flexibleWidth: 9999);
+        connectButton.OnClick += Plugin.Client.Connect;
+
+        foreach (var rect in ContentRoot.GetComponentsInChildren<RectTransform>())
         {
-            ConnectionFocused = false;
-
-            if (!Settings.ShowConnection)
-            {
-                return;
-            }
-
-            GUI.BeginGroup(new(4, 4, 304, 48));
-            GUI.Box(new(0, 0, 300, 48), "");
-            GUI.Label(new(4, 0, 300, 20), $"{ModDisplayInfo} (F1 for Debug)");
-            GUI.Label(new(4, 24, 300, 20), "Archipelago Status: Connected");
-            GUI.EndGroup();
-            return;
+            rect.pivot = new(0f, 1f);
         }
+    }
 
-        GUI.BeginGroup(new(4, 4, 308, 128));
+    public override void Update()
+    {
+        ConnectedUIObject.SetActive(Plugin.Client.Connected && Settings.ShowConnection);
+        DisconnectedUIObject.SetActive(!Plugin.Client.Connected);
+    }
 
-        GUI.Box(new(0, 0, 300, 124), "");
+    private void OnHostInput(string input)
+    {
+        Plugin.State.Uri = input;
+    }
 
-        GUI.Label(new(4, 0, 300, 20), ModDisplayInfo);
-        GUI.Label(new(4, 20, 300, 20), "Archipelago Status: Disconnected");
-        GUI.Label(new(4, 40, 150, 20), "Host: ");
-        GUI.Label(new(4, 60, 150, 20), "Player Name: ");
-        GUI.Label(new(4, 80, 150, 20), "Password: ");
+    private void OnPlayerNameInput(string input)
+    {
+        Plugin.State.SlotName = input;
+    }
 
-        // var e = Event.current;
-        // var control = GUI.GetNameOfFocusedControl();
-        // var pressedEnter = e.type == EventType.KeyUp &&
-        //                     control is "uri" or "slotName" or "password" &&
-        //                     e.keyCode is KeyCode.KeypadEnter or KeyCode.Return;
+    private void OnPasswordInput(string input)
+    {
+        Plugin.State.Password = input;
+    }
 
-        // ConnectionFocused = control is "uri" or "slotName" or "password";
+    public override void SetDefaultSizeAndPosition()
+    {
+        Rect.position = new(4f, UiBase.Canvas.pixelRect.height - 4);
+        Rect.pivot = new Vector2(0f, 1f);
 
-        try
+        Rect.anchorMin = DefaultAnchorMin;
+        Rect.anchorMax = DefaultAnchorMax;
+
+        LayoutRebuilder.ForceRebuildLayoutImmediate(this.Rect);
+
+        EnsureValidPosition();
+        EnsureValidSize();
+
+        Dragger.OnEndResize();
+    }
+
+    private static void Log(object message, LogType logType)
+    {
+        string log = message?.ToString() ?? "";
+
+        switch (logType)
         {
-            // GUI.SetNextControlName("uri");
-            // var uri = GUI.TextField(new(134, 40, 150, 20), ArchipelagoPlugin.State.Uri);
-            // GUI.SetNextControlName("slotName");
-            // var slotName = GUI.TextField(new(134, 60, 150, 20), ArchipelagoPlugin.State.SlotName);
-            // GUI.SetNextControlName("password");
-            // var password = GUI.PasswordField(new(134, 80, 150, 20), ArchipelagoPlugin.State.Password, "*"[0]);
-        }
-        catch (Exception e)
-        {
-            Plugin.Logger.LogError(e);
-        }
-        finally
-        {
-            GUI.EndGroup();
-        }
-        // ArchipelagoPlugin.UpdateConnectionInfo(uri, slotName, password);
+            case LogType.Assert:
+            case LogType.Log:
+                Plugin.Logger.LogMessage(log);
+                break;
 
-        // var pressedButton = GUI.Button(new(4, 100, 100, 20), "Connect");
+            case LogType.Warning:
+                Plugin.Logger.LogWarning(log);
+                break;
 
-        // if (pressedEnter || pressedButton)
-        // {
-        //     ArchipelagoPlugin.Client.Connect();
-        // }
-
-        // GUI.EndGroup();
+            case LogType.Error:
+            case LogType.Exception:
+                Plugin.Logger.LogError(log);
+                break;
+        }
     }
 }

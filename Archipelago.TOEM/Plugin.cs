@@ -43,15 +43,14 @@ public class Plugin : BasePlugin
         Settings.ShowConnection = _configShowConnection.Value;
         Settings.ShowConsole = _configShowConsole.Value;
 
-        Logger = Log;
-
         var harmony = new Harmony(MyPluginInfo.PLUGIN_GUID);
         harmony.PatchAll(Assembly.GetExecutingAssembly());
 
         State = new(_configUri.Value, _configSlotName.Value, _configPassword.Value);
         Game = new();
         Client = new();
-        HUD.Initialize(this);
+        HUD.Initialize();
+        OldHUD.Initialize(this);
 
         Logger.LogInfo($"Plugin {MyPluginInfo.PLUGIN_GUID} v{MyPluginInfo.PLUGIN_VERSION} is loaded!");
     }

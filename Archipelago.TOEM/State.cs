@@ -20,16 +20,15 @@ public class ApItemInfo
 
 public class SlotOptions
 {
-    public bool IncludeAchievements { get; set; }
-    public bool IncludeBasto { get; set; }
+    public bool Include_Basto { get; set; }
+    public bool Include_Items { get; set; }
+    public bool Include_Cassettes { get; set; }
+    public bool Include_Achievements { get; set; }
 }
 
 public class SlotData
 {
-    [JsonProperty("version")]
     public string Version { get; set; }
-
-    [JsonProperty("options")]
     public SlotOptions Options { get; set; }
 }
 
@@ -44,13 +43,7 @@ public class State
     public SlotData SlotData;
     public Dictionary<long, ApItemInfo> LocationInfos = [];
     public List<long> CheckedLocations { get; set; } = [];
-    public int ItemIndex { get; set; }
-    public int HomeStamps { get; set; }
-    public int OakStamps { get; set; }
-    public int DockStamps { get; set; }
-    public int CityStamps { get; set; }
-    public int SnowStamps { get; set; }
-    public int BastoStamps { get; set; }
+    public int ItemIndex { get; set; } = 1;
 
     public State()
     {
@@ -91,12 +84,6 @@ public class State
     public void ClearSave()
     {
         Valid = false;
-        ItemIndex = 0;
-        HomeStamps = 0;
-        OakStamps = 0;
-        DockStamps = 0;
-        CityStamps = 0;
-        SnowStamps = 0;
-        BastoStamps = 0;
+        ItemIndex = 1;
     }
 }

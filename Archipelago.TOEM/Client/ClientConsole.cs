@@ -1,11 +1,54 @@
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using UnityEngine.UI;
+using UniverseLib;
+using UniverseLib.UI;
+using UniverseLib.UI.Widgets;
 
 namespace Archipelago.TOEM.Client;
 
 // adapted from oc2-modding https://github.com/toasterparty/oc2-modding/blob/main/OC2Modding/GameLog.cs
-public static class ClientConsole
+public class ClientConsole : UniverseLib.UI.Panels.PanelBase
+{
+    public ClientConsole(UIBase owner) : base(owner) { }
+
+    public override string Name => "Client Console";
+    public override int MinWidth => 300;
+    public override int MinHeight => 48;
+    public override Vector2 DefaultAnchorMin => new(0f, 0.85f);
+    public override Vector2 DefaultAnchorMax => new(0.15f, 1f);
+    public override bool CanDragAndResize => false;
+
+    protected override void ConstructPanelContent()
+    {
+        UIRoot.GetComponent<Image>().enabled = false;
+        UIRoot.GetComponent<VerticalLayoutGroup>().childForceExpandHeight = false;
+        ContentRoot.GetComponent<Image>().color = new(0f, 0f, 0f, 0.5f);
+        ContentRoot.GetComponent<VerticalLayoutGroup>().padding = new(10, 10, 10, 10);
+        ContentRoot.GetComponent<VerticalLayoutGroup>().spacing = 5;
+        ContentRoot.GetComponent<LayoutElement>().flexibleHeight = 0;
+        ContentRoot.GetComponent<RectTransform>().pivot = new(0f, 1f);
+
+        GameObject scrollObj = UIFactory.CreateScrollView(ContentRoot, "ConsoleScrollView", out GameObject scrollContent, out AutoSliderScrollbar scrollbar,
+            new Color(0f, 0f, 0f, 0.5f));
+        UIFactory.SetLayoutElement(scrollObj, minHeight: 250, preferredHeight: 300, flexibleHeight: 0, flexibleWidth: 9999);
+        Text consoleText = UIFactory.CreateLabel(scrollContent, "ConsoleText", "Hello World\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n5");
+        UIFactory.SetLayoutElement(consoleText.gameObject, minHeight: 100);
+
+
+        foreach (var rect in ContentRoot.GetComponentsInChildren<RectTransform>())
+        {
+            rect.pivot = new(0f, 1f);
+        }
+    }
+
+    public override void Update()
+    {
+    }
+}
+
+public static class OldClientConsole
 {
     public static bool Hidden { get; private set; } = true;
 
@@ -79,19 +122,21 @@ public static class ClientConsole
             return;
         }
 
-        // var e = Event.current;
-        // var control = GUI.GetNameOfFocusedControl();
-        // var pressedEnter = e.type == EventType.KeyDown && control == "message" &&
-        //                    e.keyCode is KeyCode.KeypadEnter or KeyCode.Return;
+        /*
+        var e = Event.current;
+        var control = GUI.GetNameOfFocusedControl();
+        var pressedEnter = e.type == EventType.KeyDown && control == "message" &&
+                           e.keyCode is KeyCode.KeypadEnter or KeyCode.Return;
 
-        // GUI.SetNextControlName("message");
-        // _commandText = GUI.TextField(_commandTextRect, _commandText);
-        // var pressedButton = GUI.Button(_sendCommandButton, "Send");
-        // if (!string.IsNullOrWhiteSpace(_commandText) && (pressedButton || pressedEnter))
-        // {
-        //     Plugin.Client.SendMessage(_commandText);
-        //     _commandText = "";
-        // }
+        GUI.SetNextControlName("message");
+        _commandText = GUI.TextField(_commandTextRect, _commandText);
+        var pressedButton = GUI.Button(_sendCommandButton, "Send");
+        if (!string.IsNullOrWhiteSpace(_commandText) && (pressedButton || pressedEnter))
+        {
+            Plugin.Client.SendMessage(_commandText);
+            _commandText = "";
+        }
+        */
     }
 
     public static void UpdateWindow()

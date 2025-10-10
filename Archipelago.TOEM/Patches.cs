@@ -16,16 +16,12 @@ internal class CommunityController_Patch
     public static bool GetStamp(Quest completedQuest)
     {
         Plugin.Logger.LogInfo($"CommunityController.GetStamp({completedQuest})");
-        bool include_basto = Plugin.State.SlotData?.Options.Include_Basto ?? true;
+        bool include_basto = Plugin.State.SlotData?.Options.include_basto ?? true;
         bool found = Data.QuestToApLocationId.TryGetValue(completedQuest.jsonSaveKey, out var apLocation);
         if (!found || (!include_basto && apLocation >= ApLocationId.FirstBasto))
             return true;
 
         Plugin.Game.CheckLocation(apLocation);
-        if (apLocation == ApLocationId.QuestExperienceToem && !include_basto)
-        {
-            Plugin.Game.SendCompletion();
-        }
 
         // Delegate isn't setup until after this call. Delay removing until next Update prefix.
         resetOnMenuRemoved = true;
@@ -105,6 +101,7 @@ internal class SaveManager_Patch
     }
 }
 
+/*
 [HarmonyPatch(typeof(QuestManager))]
 internal class QuestManager_Patch
 {
@@ -113,13 +110,9 @@ internal class QuestManager_Patch
     public static void AddQuestStatus(Quest questToSave)
     {
         Plugin.Logger.LogInfo($"QuestManager.AddQuestStatus({questToSave.jsonSaveKey}), status: {questToSave.currentStatus}");
-        bool include_basto = Plugin.State.SlotData?.Options.Include_Basto ?? true;
-        if (questToSave.jsonSaveKey == "Kiosky Gate -Backend Quest" && questToSave.currentStatus == Quest.QuestStatus.Completed && include_basto)
-        {
-            Plugin.Game.SendCompletion();
-        }
     }
 }
+*/
 
 [HarmonyPatch(typeof(PhotoCompendium))]
 internal class PhotoCompendium_Patch
@@ -129,7 +122,7 @@ internal class PhotoCompendium_Patch
     public static void AddToCompendium(CompendiumPhotoTag tagToSave)
     {
         Plugin.Logger.LogInfo($"PhotoCompendium.AddToCompendium({tagToSave.creatureName})");
-        bool include_basto = Plugin.State.SlotData?.Options.Include_Basto ?? true;
+        bool include_basto = Plugin.State.SlotData?.Options.include_basto ?? true;
         bool found = Data.CreatureToApLocationId.TryGetValue(tagToSave.creatureName, out var apLocation);
         if (!found || (!include_basto && apLocation >= ApLocationId.FirstBasto))
             return;
@@ -146,8 +139,8 @@ internal class PlayerInventory_Patch
     public static bool AddItem(Item_SO itemToAdd, int count, bool addedFromSaveFile)
     {
         Plugin.Logger.LogInfo($"PlayerInventory.AddItem({itemToAdd.jsonSaveKey}, {count}, {addedFromSaveFile})");
-        bool include_basto = Plugin.State.SlotData?.Options.Include_Basto ?? true;
-        bool include_items = Plugin.State.SlotData?.Options.Include_Items ?? true;
+        bool include_basto = Plugin.State.SlotData?.Options.include_basto ?? true;
+        bool include_items = Plugin.State.SlotData?.Options.include_items ?? true;
         bool found = Data.ItemToApLocationId.TryGetValue(itemToAdd.jsonSaveKey, out var apLocation);
         if (addedFromSaveFile || Plugin.Game.IsServerItem || !found || !include_items ||
                 (!include_basto && apLocation >= ApLocationId.FirstBasto))
@@ -165,7 +158,7 @@ internal class GetItemScreen_Patch
     [HarmonyPostfix]
     public static void CheckCloseMenu()
     {
-        bool include_items = Plugin.State.SlotData?.Options.Include_Items ?? true;
+        bool include_items = Plugin.State.SlotData?.Options.include_items ?? true;
         if (!include_items)
             return;
 
@@ -186,8 +179,8 @@ internal class ChestController_Patch
     public static bool Start(ChestController __instance)
     {
         Plugin.Logger.LogInfo($"ChestController.Start()");
-        bool include_basto = Plugin.State.SlotData?.Options.Include_Basto ?? true;
-        bool include_items = Plugin.State.SlotData?.Options.Include_Items ?? true;
+        bool include_basto = Plugin.State.SlotData?.Options.include_basto ?? true;
+        bool include_items = Plugin.State.SlotData?.Options.include_items ?? true;
         bool found = Data.ItemToApLocationId.TryGetValue(__instance.itemInside.jsonSaveKey, out var apLocation);
         if (!found || !include_items || (!include_basto && apLocation >= ApLocationId.FirstBasto))
             return true;
@@ -213,7 +206,7 @@ internal class InventoryHasItem_Patch
     [HarmonyPrefix]
     public static bool ExecuteEvent(InventoryHasItem __instance)
     {
-        bool include_items = Plugin.State.SlotData?.Options.Include_Items ?? true;
+        bool include_items = Plugin.State.SlotData?.Options.include_items ?? true;
         bool found = Data.ItemToApLocationId.TryGetValue(__instance.item.jsonSaveKey, out var apLocation);
         if (!found || !include_items)
             return true;
@@ -244,7 +237,7 @@ internal class CheckItemNode_Patch
     [HarmonyPrefix]
     public static bool EvaluateConditions(CheckItemNode __instance, ref bool __result)
     {
-        bool include_items = Plugin.State.SlotData?.Options.Include_Items ?? true;
+        bool include_items = Plugin.State.SlotData?.Options.include_items ?? true;
         if (!include_items)
             return true;
 
@@ -260,5 +253,21 @@ internal class CheckItemNode_Patch
         }
 
         return true;
+    }
+}
+
+[HarmonyPatch(typeof(TheEndScreen))]
+internal class TheEndScreen_Patch
+{
+    [HarmonyPatch(nameof(TheEndScreen.OnMenuOpen))]
+    [HarmonyPrefix]
+    public static void OnMenuOpen()
+    {
+        Plugin.Logger.LogInfo($"TheEndScreen.OnMenuOpen(), ResortEnd: {TheEndScreen.triggerResortEnding}");
+        bool include_basto = Plugin.State.SlotData?.Options.include_basto ?? true;
+        if (include_basto == TheEndScreen.triggerResortEnding)
+        {
+            Plugin.Game.SendCompletion();
+        }
     }
 }

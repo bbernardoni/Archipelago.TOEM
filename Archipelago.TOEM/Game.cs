@@ -36,6 +36,27 @@ public class Game
             {
                 Plugin.Logger.LogInfo($"Setting {region.Name} unlocked");
                 region.isUnlocked = true;
+                switch (region.region)
+                {
+                    case Quest.QuestRegion.Home:
+                        region.requiredStamps = Plugin.State.SlotData.Options.homelanda_stamp_requirement;
+                        break;
+                    case Quest.QuestRegion.Forest:
+                        region.requiredStamps = Plugin.State.SlotData.Options.oaklaville_stamp_requirement;
+                        break;
+                    case Quest.QuestRegion.Harbor:
+                        region.requiredStamps = Plugin.State.SlotData.Options.stanhamn_stamp_requirement;
+                        break;
+                    case Quest.QuestRegion.City:
+                        region.requiredStamps = Plugin.State.SlotData.Options.logcity_stamp_requirement;
+                        break;
+                    case Quest.QuestRegion.Mountain:
+                        region.requiredStamps = Plugin.State.SlotData.Options.kiiruberg_stamp_requirement;
+                        break;
+                    case Quest.QuestRegion.Resort:
+                        region.requiredStamps = Plugin.State.SlotData.Options.basto_stamp_requirement;
+                        break;
+                }
             }
             UnlockRegions = false;
         }
@@ -66,9 +87,9 @@ public class Game
     {
         if (OutgoingLocations.Count == 0)
             return;
-            
-        bool include_basto = Plugin.State.SlotData?.Options.Include_Basto ?? true;
-        bool include_items = Plugin.State.SlotData?.Options.Include_Items ?? true;
+
+        bool include_basto = Plugin.State.SlotData?.Options.include_basto ?? true;
+        bool include_items = Plugin.State.SlotData?.Options.include_items ?? true;
         Predicate<long> filter = loc =>
             (!include_basto && loc >= (long)ApLocationId.FirstBasto) ||
             (!include_items && Data.ItemToApLocationId.ContainsValue((ApLocationId)loc));

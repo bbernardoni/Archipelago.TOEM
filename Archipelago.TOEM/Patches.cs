@@ -69,7 +69,8 @@ internal class GameManager_Patch
 [HarmonyPatch(typeof(SaveManager))]
 internal class SaveManager_Patch
 {
-    static string ItemIndexSaveKey = "ArchipelagoItemIndex";
+    static public string ItemIndexSaveKey = "ArchipelagoItemIndex";
+    static public string UnlockedAreasCountSaveKey = "unlockedAreasCount";
 
     [HarmonyPatch(nameof(SaveManager.SaveGame))]
     [HarmonyPrefix]
@@ -77,6 +78,7 @@ internal class SaveManager_Patch
     {
         Plugin.Logger.LogInfo("SaveManager.SaveGame()");
         SaveManager._GameSave_k__BackingField[ItemIndexSaveKey] = Plugin.State.ItemIndex;
+        SaveManager._GameSave_k__BackingField[UnlockedAreasCountSaveKey] = Menus.MapMenu.Instance.unlockedAreasCount;
     }
 
     [HarmonyPatch(nameof(SaveManager.OnLoadDone))]
@@ -98,6 +100,35 @@ internal class SaveManager_Patch
         Plugin.Logger.LogInfo("SaveManager.ResetGame()");
         Plugin.State.ClearSave();
         Plugin.Client.Disconnect();
+    }
+}
+
+[HarmonyPatch(typeof(Menus.MapMenu))]
+internal class MapMenu_Patch
+{
+    [HarmonyPatch(nameof(Menus.MapMenu.LoadUnlockedRegions))]
+    [HarmonyPrefix]
+    public static bool LoadUnlockedRegions(Menus.MapMenu __instance)
+    {
+        Plugin.Logger.LogInfo($"Menus.MapMenu.LoadUnlockedRegions()");
+        if (!SaveManager._GameSave_k__BackingField.HasKey(SaveManager_Patch.UnlockedAreasCountSaveKey))
+            return true;
+
+        int unlockedAreasCount = SaveManager._GameSave_k__BackingField[SaveManager_Patch.UnlockedAreasCountSaveKey];
+        __instance.ResetMap();
+        for (int i = 1; i < unlockedAreasCount+1 && i < __instance.mapPaths.Count; i++)
+        {
+            __instance.mapPaths[i].UnlockRegion();
+        }
+        __instance.unlockedAreasCount = unlockedAreasCount;
+
+        if (SaveManager._GameSave_k__BackingField.HasKey("Map Status"))
+        {
+            Menus.MapMenu.shouldUnlockNextRegion = SaveManager._GameSave_k__BackingField["Map Status"]["shouldUnlockNextRegion"].AsBool;
+        }
+
+        __instance.InitializeMap();
+        return false;
     }
 }
 
@@ -210,7 +241,8 @@ internal class InventoryHasItem_Patch
         bool found = Data.ItemToApLocationId.TryGetValue(__instance.item.jsonSaveKey, out var apLocation);
         if (!found || !include_items)
             return true;
-        if (apLocation != ApLocationId.ItemAwardMask && apLocation != ApLocationId.ItemGhostGlasses && apLocation != ApLocationId.ItemSandwich)
+        if (apLocation != ApLocationId.ItemAwardMask && apLocation != ApLocationId.ItemGhostGlasses &&
+                apLocation != ApLocationId.ItemSandwich && apLocation != ApLocationId.ItemFrisbee)
             return true;
 
         Plugin.Logger.LogInfo($"InventoryHasItem.ExecuteEvent() : {__instance.item.jsonSaveKey}");
@@ -225,6 +257,41 @@ internal class InventoryHasItem_Patch
         else
         {
             __instance.hasNotItem.Invoke();
+        }
+        return false;
+    }
+}
+
+[HarmonyPatch(typeof(QuestDependentEvent))]
+internal class QuestDependentEvent_Patch
+{
+    [HarmonyPatch(nameof(QuestDependentEvent.DoQuestEvent))]
+    [HarmonyPrefix]
+    public static bool DoQuestEvent(QuestDependentEvent __instance, bool isEnableEvent)
+    {
+        bool include_items = Plugin.State.SlotData?.Options.include_items ?? true;
+        if (!include_items || __instance.questToCheck == null || __instance.questToCheck.currentStatus == Quest.QuestStatus.Undiscovered)
+            return true;
+
+        long apLocation = 0;
+        if (__instance.name == "Frisbee Quest B")
+            apLocation = (long)ApLocationId.ItemFrisbee;
+        else if (__instance.name == "Supreme Sandwich Event")
+            apLocation = (long)ApLocationId.ItemSandwich;
+
+        if (apLocation == 0)
+                return true;
+
+        Plugin.Logger.LogInfo($"QuestDependentEvent.DoQuestEvent() : {__instance.name}");
+        if (Plugin.Client.IsLocationChecked(apLocation))
+        {
+            if (!isEnableEvent || __instance.executeCompletedOnEnable)
+                __instance.onQuestCompleted.Invoke();
+        }
+        else
+        {
+            if (!isEnableEvent || __instance.executeOngoingOnEnable)
+                __instance.onQuestOngoing.Invoke();
         }
         return false;
     }

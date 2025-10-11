@@ -27,7 +27,7 @@ public class Game
             else
             {
                 Plugin.State.ItemIndex++;
-                GiveItem(item);
+                GiveItem((ApItemId)item.Id);
             }
         }
         if (UnlockRegions && GameManager.instance.regionData.regionInfo.Count > 0)
@@ -92,17 +92,23 @@ public class Game
         bool include_items = Plugin.State.SlotData?.Options.include_items ?? true;
         Predicate<long> filter = loc =>
             (!include_basto && loc >= (long)ApLocationId.FirstBasto) ||
-            (!include_items && Data.ItemToApLocationId.ContainsValue((ApLocationId)loc));
+            (!include_items && Data.ApLocationIdToApItemId.ContainsKey((ApLocationId)loc));
+
+        foreach (var loc in OutgoingLocations)
+        {
+            if (filter(loc) && Data.ApLocationIdToApItemId.TryGetValue((ApLocationId)loc, out var apItem))
+            {
+                GiveItem(apItem);
+            }
+        }
         OutgoingLocations.RemoveAll(filter);
-        // TODO reward items that were filtered out
 
         Plugin.Client.SyncLocations(OutgoingLocations);
         OutgoingLocations.Clear();
     }
 
-    private void GiveItem(ApItemInfo itemInfo)
+    private void GiveItem(ApItemId apItemId)
     {
-        var apItemId = (ApItemId)itemInfo.Id;
         Plugin.Logger.LogDebug($"Got item {apItemId}");
         if (apItemId <= ApItemId.LastStamp)
         {
@@ -118,24 +124,35 @@ public class Game
         }
     }
 
+    private Vector2 GetStampPosition(int index)
+    {
+        var communityController = CommunityController.instance;
+        var clampArea = communityController.clampArea;
+        float stampX = clampArea.x + (index % 5) * (clampArea.y - clampArea.x) / 4f;
+        float stampY = clampArea.z + (index / 5 % 4) * (clampArea.w - clampArea.z) / 3f;
+        return new(stampX, stampY);
+    }
+
     private void GiveStamp(Quest.QuestRegion stampRegion)
     {
         var region = GameManager.instance.GetRegionData(stampRegion);
+        int stampIndex = region.currentStampCount;
+        Vector2 stampPos = GetStampPosition(stampIndex);
         region.currentStampCount += 1;
-        region.stampPositions.Add(Vector2.zeroVector);
+        region.stampPositions.Add(stampPos);
 
         var communityController = CommunityController.instance;
         bool isViewingRegion = stampRegion == communityController.currentViewedRegion;
-        while (communityController.allStampsList.Count < region.currentStampCount)
+        if (communityController.allStampsList.Count < region.currentStampCount)
         {
             var newStamp = UnityEngine.Object.Instantiate(communityController.stampPrefab, Vector3.zeroVector, Quaternion.identity, communityController.stampContainer);
-            newStamp.transform.localPosition = Vector3.zeroVector;
             communityController.allStampsList.Add(newStamp);
-            if (isViewingRegion)
-                newStamp.Active();
         }
         if (isViewingRegion)
         {
+            var newStamp = communityController.allStampsList[stampIndex];
+            newStamp.transform.localPosition = stampPos;
+            newStamp.Active();
             int countToRequired = Math.Min(region.requiredStamps, region.currentStampCount);
             communityController.regionRequiredStamps.Text = $"{countToRequired}/{region.requiredStamps}";
             communityController.allRegionStampCount.Text = $"{region.currentStampCount}/{region.totalQuestCount}";

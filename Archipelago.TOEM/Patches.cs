@@ -169,12 +169,23 @@ internal class PlayerInventory_Patch
     [HarmonyPrefix]
     public static bool AddItem(Item_SO itemToAdd, int count, bool addedFromSaveFile)
     {
+        if (addedFromSaveFile || Plugin.Game.IsServerItem)
+            return true;
+
         Plugin.Logger.LogInfo($"PlayerInventory.AddItem({itemToAdd.jsonSaveKey}, {count}, {addedFromSaveFile})");
         bool include_basto = Plugin.State.SlotData?.Options.include_basto ?? true;
         bool include_items = Plugin.State.SlotData?.Options.include_items ?? true;
+        bool include_cassettes = Plugin.State.SlotData?.Options.include_cassettes ?? true;
         bool found = Data.ItemToApLocationId.TryGetValue(itemToAdd.jsonSaveKey, out var apLocation);
-        if (addedFromSaveFile || Plugin.Game.IsServerItem || !found || !include_items ||
-                (!include_basto && apLocation >= ApLocationId.FirstBasto))
+        if (found && !include_items)
+            return true;
+        if (!found)
+        {
+            found = Data.CassetteToApLocationId.TryGetValue(itemToAdd.jsonSaveKey, out apLocation);
+            if (found && !include_cassettes)
+                return true;
+        }
+        if (!found || (!include_basto && apLocation >= ApLocationId.FirstBasto))
             return true;
         if (apLocation == ApLocationId.ItemEmptyBottle && Plugin.Client.IsLocationChecked((long)apLocation))
             return true;

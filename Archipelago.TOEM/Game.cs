@@ -90,9 +90,11 @@ public class Game
 
         bool include_basto = Plugin.State.SlotData?.Options.include_basto ?? true;
         bool include_items = Plugin.State.SlotData?.Options.include_items ?? true;
+        bool include_cassettes = Plugin.State.SlotData?.Options.include_cassettes ?? true;
         Predicate<long> filter = loc =>
             (!include_basto && loc >= (long)ApLocationId.FirstBasto) ||
-            (!include_items && Data.ApLocationIdToApItemId.ContainsKey((ApLocationId)loc));
+            (!include_items && Data.ItemToApLocationId.ContainsValue((ApLocationId)loc)) ||
+            (!include_cassettes && Data.CassetteToApLocationId.ContainsValue((ApLocationId)loc));
 
         foreach (var loc in OutgoingLocations)
         {
@@ -118,7 +120,7 @@ public class Game
         {
             // GivePhoto
         }
-        else if (apItemId <= ApItemId.LastItem)
+        else if (apItemId <= ApItemId.LastCassette)
         {
             GiveGameItem(Data.ApItemIdToItem[apItemId]);
         }

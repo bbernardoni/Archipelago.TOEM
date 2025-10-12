@@ -2,7 +2,6 @@ using HarmonyLib;
 using Photographing;
 using Quests;
 using Dialogue;
-using System.Diagnostics;
 
 namespace Archipelago.TOEM;
 
@@ -354,5 +353,48 @@ internal class TheEndScreen_Patch
         {
             Plugin.Game.SendCompletion();
         }
+    }
+}
+
+[HarmonyPatch(typeof(Achievements.BaseAchievement))]
+internal class BaseAchievement_Patch
+{
+    [HarmonyPatch(nameof(Achievements.BaseAchievement.CompleteAchievement))]
+    [HarmonyPrefix]
+    public static void CompleteAchievement(Achievements.BaseAchievement __instance, bool previouslyCompleted)
+    {
+        Plugin.Logger.LogInfo($"Achievements.BaseAchievement.CompleteAchievement({previouslyCompleted}): {__instance.name}");
+        bool include_achievements = Plugin.State.SlotData?.Options.include_achievements ?? true;
+        bool include_basto = Plugin.State.SlotData?.Options.include_basto ?? true;
+        bool found = Data.CheevoToApLocationId.TryGetValue(__instance.name, out var apLocation);
+        if (previouslyCompleted || !found || !include_achievements || (!include_basto && apLocation >= ApLocationId.FirstBasto))
+            return;
+
+        Plugin.Game.CheckLocation(apLocation);
+    }
+}
+
+[HarmonyPatch(typeof(Achievements.Achievement_CompleteQuestRegion))]
+internal class Achievement_CompleteQuestRegion_Patch
+{
+    [HarmonyPatch(nameof(Achievements.Achievement_CompleteQuestRegion.Progress))]
+    [HarmonyPrefix]
+    public static bool Progress(Achievements.Achievement_CompleteQuestRegion __instance)
+    {
+        bool include_achievements = Plugin.State.SlotData?.Options.include_achievements ?? true;
+        bool include_basto = Plugin.State.SlotData?.Options.include_basto ?? true;
+        bool found = Data.CheevoToApLocationId.TryGetValue(__instance.name, out var apLocation);
+        if (!found || !include_achievements || (!include_basto && apLocation >= ApLocationId.FirstBasto))
+            return true;
+
+        Plugin.Logger.LogInfo($"Achievements.Achievement_CompleteQuestRegion.Progress(): {__instance.name}");
+        var regionQuests = GameManager.QuestDatabase.GetQuestList(__instance.region);
+        foreach (var quest in regionQuests)
+        {
+            if (!quest.isSubQuest && !quest.isBackendQuest && quest.currentStatus != Quest.QuestStatus.Completed)
+                return false;
+        }
+        __instance.CompleteAchievement(__instance.completed);
+        return false;
     }
 }

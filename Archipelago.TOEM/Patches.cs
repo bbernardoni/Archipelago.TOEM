@@ -132,18 +132,19 @@ internal class MapMenu_Patch
     }
 }
 
-/*
 [HarmonyPatch(typeof(QuestManager))]
 internal class QuestManager_Patch
 {
+    internal static string LastUpdatedQuest;
+
     [HarmonyPatch(nameof(QuestManager.AddQuestStatus))]
     [HarmonyPrefix]
     public static void AddQuestStatus(Quest questToSave)
     {
         Plugin.Logger.LogInfo($"QuestManager.AddQuestStatus({questToSave.jsonSaveKey}), status: {questToSave.currentStatus}");
+        LastUpdatedQuest = questToSave.jsonSaveKey;
     }
 }
-*/
 
 [HarmonyPatch(typeof(PhotoCompendium))]
 internal class PhotoCompendium_Patch
@@ -176,6 +177,22 @@ internal class PlayerInventory_Patch
         if (addedFromSaveFile || Plugin.Game.IsServerItem || !found || !include_items ||
                 (!include_basto && apLocation >= ApLocationId.FirstBasto))
             return true;
+        if (apLocation == ApLocationId.ItemEmptyBottle && Plugin.Client.IsLocationChecked((long)apLocation))
+            return true;
+
+        if (apLocation == ApLocationId.ItemIceCreamBanakin)
+        {
+            if (QuestManager_Patch.LastUpdatedQuest == "Fruit - Banana")
+                apLocation = ApLocationId.ItemIceCreamBanakin;
+            else if (QuestManager_Patch.LastUpdatedQuest == "Fruit - Pear")
+                apLocation = ApLocationId.ItemIceCreamMelonear;
+            else if (QuestManager_Patch.LastUpdatedQuest == "Fruit - Bean")
+                apLocation = ApLocationId.ItemIceCreamBeanut;
+            else if (QuestManager_Patch.LastUpdatedQuest == "Fruit - Orange")
+                apLocation = ApLocationId.ItemIceCreamOranganas;
+            else
+                Plugin.Logger.LogError($"Can't determine which fruit was turned into ice cream. LastUpdatedQuest: {QuestManager_Patch.LastUpdatedQuest}");
+        }
 
         Plugin.Game.CheckLocation(apLocation);
         return false;
@@ -242,7 +259,8 @@ internal class InventoryHasItem_Patch
         if (!found || !include_items)
             return true;
         if (apLocation != ApLocationId.ItemAwardMask && apLocation != ApLocationId.ItemGhostGlasses &&
-                apLocation != ApLocationId.ItemSandwich && apLocation != ApLocationId.ItemFrisbee)
+                apLocation != ApLocationId.ItemSandwich && apLocation != ApLocationId.ItemFrisbee &&
+                apLocation != ApLocationId.ItemFootCast)
             return true;
 
         Plugin.Logger.LogInfo($"InventoryHasItem.ExecuteEvent() : {__instance.item.jsonSaveKey}");

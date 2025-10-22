@@ -6,7 +6,6 @@ using Archipelago.MultiClient.Net;
 using Archipelago.MultiClient.Net.Enums;
 using Archipelago.MultiClient.Net.Helpers;
 using Archipelago.MultiClient.Net.MessageLog.Messages;
-using UniverseLib;
 
 namespace Archipelago.TOEM.Client;
 
@@ -92,6 +91,7 @@ public class Client
         var slotData = _session.DataStorage.GetSlotData<SlotData>();
         Plugin.State.SetupSession(slotData, _session.RoomState.Seed);
         Plugin.Game.ConnectSave();
+        Plugin.UpdateConnectionInfo(Plugin.State.Uri, Plugin.State.SlotName, Plugin.State.Password);
         _ignoreLocations = false;
         _attemptingConnection = false;
     }
@@ -126,7 +126,7 @@ public class Client
     public static void Session_OnMessageReceived(LogMessage message)
     {
         Plugin.Logger.LogMessage(message);
-        OldClientConsole.LogMessage(message.ToString());
+        ClientConsole.LogMessage(message.ToString());
     }
 
     public void SendLocation(long location)

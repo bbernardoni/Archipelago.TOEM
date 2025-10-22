@@ -1,4 +1,3 @@
-using System;
 using Archipelago.TOEM.Client;
 using UnityEngine;
 using UnityEngine.UI;
@@ -8,29 +7,6 @@ using UniverseLib.Utility;
 
 namespace Archipelago.TOEM;
 
-public class OldHUD : MonoBehaviour
-{
-    public const string ModDisplayInfo = $"{MyPluginInfo.PLUGIN_NAME} v{MyPluginInfo.PLUGIN_VERSION}";
-
-    public static void Initialize(Plugin plugin)
-    {
-        var component = plugin.AddComponent<OldHUD>();
-        component.hideFlags = HideFlags.HideAndDontSave;
-        DontDestroyOnLoad(component.gameObject);
-        Cursor.visible = true;
-    }
-
-    private void Start()
-    {
-        OldClientConsole.Awake();
-    }
-
-    private void OnGUI()
-    {
-        OldClientConsole.OnGUI();
-    }
-}
-
 public class HUD : UniverseLib.UI.Panels.PanelBase
 {
     public const string ModDisplayInfo = $"{MyPluginInfo.PLUGIN_NAME} v{MyPluginInfo.PLUGIN_VERSION}";
@@ -39,20 +15,18 @@ public class HUD : UniverseLib.UI.Panels.PanelBase
 
     public static void Initialize()
     {
-        /*
-        var component = plugin.AddComponent<HUD>();
-        component.hideFlags = HideFlags.HideAndDontSave;
-        DontDestroyOnLoad(component.gameObject);
-        Cursor.visible = true;
-        */
-        Universe.Init(LateInit, Log);
+        UniverseLib.Config.UniverseLibConfig config = new()
+        {
+            Force_Unlock_Mouse = true
+        };
+        Universe.Init(1f, LateInit, Log, config);
     }
 
     static void LateInit()
     {
         UiBase = UniversalUI.RegisterUI(MyPluginInfo.PLUGIN_GUID, UiUpdate);
         HUD HUDPanel = new(UiBase);
-        //ClientConsole ClientPanel = new(UiBase);
+        ClientConsole ClientPanel = new(UiBase);
     }
 
     static void UiUpdate()
@@ -83,20 +57,20 @@ public class HUD : UniverseLib.UI.Panels.PanelBase
         ContentRoot.GetComponent<RectTransform>().pivot = new(0f, 1f);
 
         Text modDisplayInfoText = UIFactory.CreateLabel(ContentRoot, "ModDisplayInfo", ModDisplayInfo, TextAnchor.MiddleCenter);
-        UIFactory.SetLayoutElement(modDisplayInfoText.gameObject, flexibleWidth: 9999);
+        UIFactory.SetLayoutElement(modDisplayInfoText.gameObject, minHeight: 16, flexibleWidth: 9999);
 
         ConnectedUIObject = UIFactory.CreateVerticalGroup(ContentRoot, "ConnectedUI", false, false, true, true, 5);
         ConnectedUIObject.GetComponent<Image>().enabled = false;
         ConnectedUIObject.SetActive(false);
         UIFactory.SetLayoutElement(ConnectedUIObject.gameObject);
         Text connectedText = UIFactory.CreateLabel(ConnectedUIObject, "Status", "Archipelago Status: Connected");
-        UIFactory.SetLayoutElement(connectedText.gameObject);
+        UIFactory.SetLayoutElement(connectedText.gameObject, minHeight: 16);
 
         DisconnectedUIObject = UIFactory.CreateVerticalGroup(ContentRoot, "DisconnectedUI", false, false, true, true, 5);
         DisconnectedUIObject.GetComponent<Image>().enabled = false;
         UIFactory.SetLayoutElement(DisconnectedUIObject);
         Text disconnectedText = UIFactory.CreateLabel(DisconnectedUIObject, "Status", "Archipelago Status: Disconnected");
-        UIFactory.SetLayoutElement(disconnectedText.gameObject);
+        UIFactory.SetLayoutElement(disconnectedText.gameObject, minHeight: 16);
 
         var hostGroup = UIFactory.CreateHorizontalGroup(DisconnectedUIObject, "HostGroup", false, false, true, true, 5, childAlignment: TextAnchor.MiddleLeft);
         hostGroup.GetComponent<Image>().enabled = false;

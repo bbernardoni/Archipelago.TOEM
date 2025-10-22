@@ -2,8 +2,9 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using UnityEngine.UI;
-using UniverseLib;
+using UniverseLib.Input;
 using UniverseLib.UI;
+using UniverseLib.UI.Models;
 using UniverseLib.UI.Widgets;
 
 namespace Archipelago.TOEM.Client;
@@ -16,62 +17,107 @@ public class ClientConsole : UniverseLib.UI.Panels.PanelBase
     public override string Name => "Client Console";
     public override int MinWidth => 300;
     public override int MinHeight => 48;
-    public override Vector2 DefaultAnchorMin => new(0f, 0.85f);
-    public override Vector2 DefaultAnchorMax => new(0.15f, 1f);
+    public override Vector2 DefaultAnchorMin => new(0.3f, 0.5f);
+    public override Vector2 DefaultAnchorMax => new(0.7f, 1.0f);
     public override bool CanDragAndResize => false;
+    
+    public static bool Hidden { get; private set; } = true;
+
+    private static readonly List<string> LogLines = [];
+    private static float LastUpdateTime = 0;
+    private static int UpdatedLogLines = 0;
+    private const int MaxLogLines = 80;
+    private const float HideTimeout = 15f;
+
+    private static GameObject scrollViewGroup;
+    private static GameObject shortGroup;
+    private static GameObject scrollView;
+    private static Text scrollText;
+    private static Text shortText;
+    private static Text buttonText;
+    private static InputFieldRef commandInput;
+    private static bool allowEnter;
 
     protected override void ConstructPanelContent()
     {
         UIRoot.GetComponent<Image>().enabled = false;
         UIRoot.GetComponent<VerticalLayoutGroup>().childForceExpandHeight = false;
-        ContentRoot.GetComponent<Image>().color = new(0f, 0f, 0f, 0.5f);
-        ContentRoot.GetComponent<VerticalLayoutGroup>().padding = new(10, 10, 10, 10);
+        UIRoot.GetComponent<VerticalLayoutGroup>().padding = new(0, 0, 0, 0);
+        ContentRoot.GetComponent<Image>().enabled = false;
+        ContentRoot.GetComponent<VerticalLayoutGroup>().padding = new(0, 0, 0, 0);
         ContentRoot.GetComponent<VerticalLayoutGroup>().spacing = 5;
         ContentRoot.GetComponent<LayoutElement>().flexibleHeight = 0;
         ContentRoot.GetComponent<RectTransform>().pivot = new(0f, 1f);
 
-        GameObject scrollObj = UIFactory.CreateScrollView(ContentRoot, "ConsoleScrollView", out GameObject scrollContent, out AutoSliderScrollbar scrollbar,
-            new Color(0f, 0f, 0f, 0.5f));
-        UIFactory.SetLayoutElement(scrollObj, minHeight: 250, preferredHeight: 300, flexibleHeight: 0, flexibleWidth: 9999);
-        Text consoleText = UIFactory.CreateLabel(scrollContent, "ConsoleText", "Hello World\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n5");
-        UIFactory.SetLayoutElement(consoleText.gameObject, minHeight: 100);
+        var consoleGroup = UIFactory.CreateHorizontalGroup(ContentRoot, "ConsoleGroup", false, false, true, true, 5, childAlignment: TextAnchor.UpperRight);
+        consoleGroup.GetComponent<Image>().enabled = false;
+        UIFactory.SetLayoutElement(consoleGroup, flexibleWidth: 9999);
 
+        scrollViewGroup = UIFactory.CreateVerticalGroup(consoleGroup, "ScrollViewGroup", false, false, true, true, 5, new(5f, 5f, 5f, 5f));
+        UIFactory.SetLayoutElement(scrollViewGroup, flexibleWidth: 9999);
+        scrollViewGroup.GetComponent<Image>().color = new(0f, 0f, 0f, 0.5f);
+        scrollView = UIFactory.CreateScrollView(scrollViewGroup, "ConsoleScrollView", out GameObject scrollContent, out AutoSliderScrollbar scrollbar);
+        scrollView.GetComponent<Image>().enabled = false;
+        int scrollHeight = (int)(HUD.UiBase.Canvas.pixelRect.height * 0.3);
+        UIFactory.SetLayoutElement(scrollView, minHeight: scrollHeight, flexibleWidth: 9999);
+        UIFactory.SetLayoutGroup<VerticalLayoutGroup>(scrollContent, spacing: 5, padTop: 5, padBottom: 5, padLeft: 5, padRight: 5);
+        // IDK why this is necessary but I need to toggle the scroll bad to get it rendering correctly
+        scrollbar.SetActive(false);
+        scrollbar.SetActive(true);
+        scrollText = UIFactory.CreateLabel(scrollContent, "ConsoleScrollText", "", TextAnchor.UpperLeft, fontSize: 30);
+        UIFactory.SetLayoutElement(scrollText.gameObject);
+
+        var commandGroup = UIFactory.CreateHorizontalGroup(scrollViewGroup, "CommandGroup", false, false, true, true, 5, childAlignment: TextAnchor.MiddleLeft);
+        commandGroup.GetComponent<Image>().enabled = false;
+        UIFactory.SetLayoutElement(commandGroup, flexibleWidth: 9999);
+        commandInput = UIFactory.CreateInputField(commandGroup, "CommandInput", "Command");
+        commandInput.UIRoot.transform.GetChild(0).GetComponent<RectTransform>().anchoredPosition = new(5, 0);
+        foreach (var text in commandInput.UIRoot.GetComponentsInChildren<Text>())
+            text.fontSize = 30;
+        UIFactory.SetLayoutElement(commandInput.UIRoot, minHeight: 43, flexibleWidth: 9999);
+        var commandButton = UIFactory.CreateButton(commandGroup, "CommandButton", "Send", normalColor: new(0.15f, 0.15f, 0.15f));
+        var commandButtonText = commandButton.GameObject.transform.GetChild(0).GetComponent<Text>();
+        commandButtonText.fontSize = 20;
+        UIFactory.SetLayoutElement(commandButton.GameObject, minHeight: 43, minWidth: 80);
+        commandButton.OnClick += SendCommand;
+        scrollViewGroup.SetActive(false);
+
+        shortGroup = UIFactory.CreateVerticalGroup(consoleGroup, "ShortTextGroup", false, false, true, true, 5, new(5f, 5f, 5f, 5f));
+        UIFactory.SetLayoutElement(shortGroup, minHeight: 43, preferredHeight: 43, flexibleWidth: 9999);
+        shortGroup.GetComponent<Image>().color = new(0f, 0f, 0f, 0.5f);
+        shortText = UIFactory.CreateLabel(shortGroup, "ConsoleText", "", TextAnchor.UpperLeft, fontSize: 30);
+        UIFactory.SetLayoutElement(shortText.gameObject);
+        shortText.gameObject.GetComponent<RectTransform>().pivot = new(0f, 1f);
+        shortGroup.SetActive(false);
+
+        var showButton = UIFactory.CreateButton(consoleGroup, "ConnectButton", "Show");
+        buttonText = showButton.GameObject.transform.GetChild(0).GetComponent<Text>();
+        buttonText.fontSize = 20;
+        UIFactory.SetLayoutElement(showButton.GameObject, minHeight: 43, minWidth: 80);
+        showButton.OnClick += ToggleConsole;
 
         foreach (var rect in ContentRoot.GetComponentsInChildren<RectTransform>())
-        {
             rect.pivot = new(0f, 1f);
+        foreach (var rect in scrollViewGroup.GetComponentsInChildren<RectTransform>())
+            rect.pivot = new(0f, 1f);
+        foreach (var rect in scrollView.transform.GetChild(1).GetComponentsInChildren<RectTransform>())
+            rect.pivot = new(0.5f, 0.5f);
+    }
+
+    public static void ToggleConsole()
+    {
+        Hidden = !Hidden;
+        buttonText.text = Hidden ? "Show" : "Hide";
+    }
+
+    public static void SendCommand()
+    {
+        string command = commandInput.Text;
+        if (!string.IsNullOrWhiteSpace(command) && Plugin.Client.Connected)
+        {
+            Plugin.Client.SendMessage(command);
         }
-    }
-
-    public override void Update()
-    {
-    }
-}
-
-public static class OldClientConsole
-{
-    public static bool Hidden { get; private set; } = true;
-
-    private static readonly List<string> LogLines = [];
-    private static Vector2 _scrollView;
-    private static Rect _window;
-    private static Rect _scroll;
-    private static Rect _text;
-    private static Rect _hideShowButton;
-
-    private static readonly GUIStyle TextStyle = new();
-    private static string _scrollText = "";
-    private static float _lastUpdateTime = Time.time;
-    private const int MaxLogLines = 80;
-    private const float HideTimeout = 15f;
-
-    private static string _commandText = "";
-    private static Rect _commandTextRect;
-    private static Rect _sendCommandButton;
-
-    public static void Awake()
-    {
-        UpdateWindow();
+        commandInput.Text = "";
     }
 
     public static void LogMessage(string message)
@@ -87,128 +133,67 @@ public static class OldClientConsole
         }
 
         LogLines.Add(message);
-        _lastUpdateTime = Time.time;
-        UpdateWindow();
+        LastUpdateTime = Time.time;
+        UpdatedLogLines = 2;
     }
 
-    public static void OnGUI()
+    public override void Update()
     {
-        if (!Settings.ShowConsole || LogLines.Count == 0)
-        {
-            return;
-        }
+        bool oldScrollViewActive = scrollViewGroup.active;
+        scrollViewGroup.SetActive(!Hidden);
+        shortGroup.SetActive(Hidden && Time.time - LastUpdateTime < HideTimeout);
 
-        if (!Hidden || Time.time - _lastUpdateTime < HideTimeout)
-        {
-            _scrollView = GUI.BeginScrollView(_window, _scrollView, _scroll);
-            GUI.Box(_text, "");
-            GUI.Box(_text, _scrollText, TextStyle);
-            GUI.EndScrollView();
-        }
+        if (!oldScrollViewActive && scrollViewGroup.active)
+            commandInput.Component.Select();
 
-        if (GUI.Button(_hideShowButton, Hidden ? "Show" : "Hide"))
+        if (LogLines.Count > 0)
         {
-            Hidden = !Hidden;
-            UpdateWindow();
-            if (!Hidden)
-            {
-                GUI.FocusControl("message");
-            }
-        }
-
-        // draw client/server commands entry
-        if (Hidden || !Plugin.Client.Connected)
-        {
-            return;
-        }
-
-        /*
-        var e = Event.current;
-        var control = GUI.GetNameOfFocusedControl();
-        var pressedEnter = e.type == EventType.KeyDown && control == "message" &&
-                           e.keyCode is KeyCode.KeypadEnter or KeyCode.Return;
-
-        GUI.SetNextControlName("message");
-        _commandText = GUI.TextField(_commandTextRect, _commandText);
-        var pressedButton = GUI.Button(_sendCommandButton, "Send");
-        if (!string.IsNullOrWhiteSpace(_commandText) && (pressedButton || pressedEnter))
-        {
-            Plugin.Client.SendMessage(_commandText);
-            _commandText = "";
-        }
-        */
-    }
-
-    public static void UpdateWindow()
-    {
-        _scrollText = "";
-
-        if (Hidden)
-        {
-            if (LogLines.Count > 0)
-            {
-                _scrollText = LogLines[^1];
-            }
-        }
-        else
-        {
+            shortText.text = LogLines[^1];
+            string scrollString = "";
             for (var i = 0; i < LogLines.Count; i++)
             {
-                _scrollText += LogLines.ElementAt(i);
+                scrollString += LogLines.ElementAt(i);
                 if (i < LogLines.Count - 1)
                 {
-                    _scrollText += "\n";
+                    scrollString += "\n";
+                }
+            }
+            scrollText.text = scrollString;
+            if (UpdatedLogLines > 0)
+            {
+                UpdatedLogLines--;
+                if  (UpdatedLogLines == 0)
+                {
+                    scrollView.GetComponent<ScrollRect>().SetVerticalNormalizedPosition(0f);
                 }
             }
         }
-
-        var width = (int)(Screen.width * 0.4f);
-        int height;
-        int scrollDepth;
-        if (Hidden)
-        {
-            height = (int)(Screen.height * 0.03f);
-            scrollDepth = height;
-        }
         else
         {
-            height = (int)(Screen.height * 0.3f);
-            scrollDepth = height * 10;
+            shortText.text = "";
+            scrollText.text = "";
         }
 
-        _window = new(Screen.width / 2f - width / 2f, 0, width, height);
-        _scroll = new(0, 0, width * 0.9f, scrollDepth);
-        _scrollView = new(0, scrollDepth);
-        _text = new(0, 0, width, scrollDepth);
+        bool enter = InputManager.GetKeyDown(KeyCode.Return) || InputManager.GetKeyDown(KeyCode.KeypadEnter);
+        if (allowEnter && enter)
+            SendCommand();
+        else
+            allowEnter = commandInput.Component.isFocused;
+    }
 
-        TextStyle.alignment = TextAnchor.LowerLeft;
-        TextStyle.fontSize = Hidden ? (int)(Screen.height * 0.0165f) : (int)(Screen.height * 0.0185f);
-        TextStyle.normal.textColor = Color.white;
-        TextStyle.wordWrap = !Hidden;
+    public override void SetDefaultSizeAndPosition()
+    {
+        Rect.position = new(HUD.UiBase.Canvas.pixelRect.width * 0.3f, HUD.UiBase.Canvas.pixelRect.height);
+        Rect.pivot = new Vector2(0f, 1f);
 
-        var xPadding = (int)(Screen.width * 0.01f);
-        var yPadding = (int)(Screen.height * 0.01f);
+        Rect.anchorMin = DefaultAnchorMin;
+        Rect.anchorMax = DefaultAnchorMax;
 
-        TextStyle.padding = Hidden
-            ? new(xPadding / 2, xPadding / 2, yPadding / 2, yPadding / 2)
-            : new(xPadding, xPadding, yPadding, yPadding);
+        LayoutRebuilder.ForceRebuildLayoutImmediate(Rect);
 
-        var buttonWidth = (int)(Screen.width * 0.12f);
-        var buttonHeight = (int)(Screen.height * 0.03f);
+        EnsureValidPosition();
+        EnsureValidSize();
 
-        _hideShowButton = new(Screen.width / 2f + width / 2f + buttonWidth / 3f, Screen.height * 0.004f, buttonWidth,
-            buttonHeight);
-
-        // draw server command text field and button
-        width = (int)(Screen.width * 0.4f);
-        var xPos = (int)(Screen.width / 2.0f - width / 2.0f);
-        var yPos = (int)(Screen.height * 0.307f);
-        height = 20;
-
-        _commandTextRect = new(xPos, yPos, width, height);
-
-        width = 100;
-        yPos += 24;
-        _sendCommandButton = new(xPos, yPos, width, height);
+        Dragger.OnEndResize();
     }
 }

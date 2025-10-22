@@ -50,7 +50,6 @@ public class Plugin : BasePlugin
         Game = new();
         Client = new();
         HUD.Initialize();
-        OldHUD.Initialize(this);
 
         Logger.LogInfo($"Plugin {MyPluginInfo.PLUGIN_GUID} v{MyPluginInfo.PLUGIN_VERSION} is loaded!");
     }

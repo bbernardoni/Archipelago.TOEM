@@ -150,6 +150,16 @@ public class Client
         return _session.Locations.AllLocationsChecked.Contains(location);
     }
 
+    public int GetNumLocationChecked()
+    {
+        if (!Connected)
+        {
+            return -1;
+        }
+
+        return _session.Locations.AllLocationsChecked.Count;
+    }
+
     public bool SyncLocations(List<long> locations)
     {
         if (!Connected || locations == null || locations.Count == 0)

@@ -98,7 +98,6 @@ internal class SaveManager_Patch
     {
         Plugin.Logger.LogInfo("SaveManager.ResetGame()");
         Plugin.State.ClearSave();
-        Plugin.Client.Disconnect();
     }
 }
 

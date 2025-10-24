@@ -79,6 +79,15 @@ public class Game
 
     public void ConnectSave()
     {
+        // casting doesn't work for some reason, so the workaround is a bit hacky
+        TitleScreenMenu titleScreenMenu = MenuManager.Instance.menu_TitleScreen.gameObject.GetComponent<TitleScreenMenu>();
+        if (titleScreenMenu.gameObject.active && Plugin.Client.GetNumLocationChecked()==0 && SaveManager.SaveExists())
+        {
+            //Bring up reset save menu
+            titleScreenMenu.SetNewGamePromptState(true);
+            if (Plugin.State.SlotData.Options.include_achievements)
+                titleScreenMenu.keepAchievementsOption.ToggleOn(); // "On" means reset achievements
+        }
         UnlockRegions = true;
         SyncLocations();
     }

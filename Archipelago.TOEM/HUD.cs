@@ -1,8 +1,12 @@
+using System.Collections.Generic;
+using System.Linq;
 using Archipelago.TOEM.Client;
 using UnityEngine;
 using UnityEngine.UI;
 using UniverseLib;
+using UniverseLib.Input;
 using UniverseLib.UI;
+using UniverseLib.UI.Models;
 using UniverseLib.Utility;
 
 namespace Archipelago.TOEM;
@@ -45,6 +49,8 @@ public class HUD : UniverseLib.UI.Panels.PanelBase
 
     private GameObject ConnectedUIObject;
     private GameObject DisconnectedUIObject;
+    private static bool InputWasFocused;
+    private static List<InputFieldRef> Inputs;
 
     protected override void ConstructPanelContent()
     {
@@ -106,6 +112,8 @@ public class HUD : UniverseLib.UI.Panels.PanelBase
         passwordInput.Component.text = Plugin.State.Password;
         passwordInput.Component.GetOnEndEdit().AddListener(OnPasswordInput);
 
+        Inputs = [hostInput, playerNameInput, passwordInput];
+
         var connectButton = UIFactory.CreateButton(DisconnectedUIObject, "ConnectButton", "Connect");
         UIFactory.SetLayoutElement(connectButton.GameObject, minHeight: 25, flexibleWidth: 9999);
         connectButton.OnClick += Plugin.Client.Connect;
@@ -120,6 +128,20 @@ public class HUD : UniverseLib.UI.Panels.PanelBase
     {
         ConnectedUIObject.SetActive(Plugin.Client.Connected && Settings.ShowConnection);
         DisconnectedUIObject.SetActive(!Plugin.Client.Connected);
+
+        if (InputManager.GetMouseButtonDown(0))
+        {
+            foreach (var input in Inputs)
+            {
+                if (input.Component.isFocused && !RectContainsPoint(input.Transform, InputManager.MousePosition))
+                    input.Component.DeactivateInputField();
+            }
+        }
+
+        bool InputIsFocused = Inputs.Any(i => i.Component.isFocused);
+        if (InputWasFocused != InputIsFocused)
+            OurInputManager.playerHasControl = !InputIsFocused;
+        InputWasFocused = InputIsFocused;
     }
 
     private void OnHostInput(string input)
@@ -173,5 +195,11 @@ public class HUD : UniverseLib.UI.Panels.PanelBase
                 Plugin.Logger.LogError(log);
                 break;
         }
+    }
+
+    public static bool RectContainsPoint(RectTransform rect, Vector2 point)
+    {
+        return point.x >= rect.position.x && point.x <= (rect.position.x + rect.rect.width) &&
+               point.y <= rect.position.y && point.y >= (rect.position.y - rect.rect.height);
     }
 }

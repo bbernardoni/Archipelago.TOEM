@@ -24,7 +24,7 @@ public class ClientConsole : UniverseLib.UI.Panels.PanelBase
     public static bool Hidden { get; private set; } = true;
 
     private static readonly List<string> LogLines = [];
-    private static float LastUpdateTime = 0;
+    private static float LastUpdateTime = -HideTimeout;
     private static int UpdatedLogLines = 0;
     private const int MaxLogLines = 80;
     private const float HideTimeout = 15f;
@@ -36,7 +36,7 @@ public class ClientConsole : UniverseLib.UI.Panels.PanelBase
     private static Text shortText;
     private static Text buttonText;
     private static InputFieldRef commandInput;
-    private static bool allowEnter;
+    private static bool commandInputWasFocused;
 
     protected override void ConstructPanelContent()
     {
@@ -90,7 +90,7 @@ public class ClientConsole : UniverseLib.UI.Panels.PanelBase
         shortText.gameObject.GetComponent<RectTransform>().pivot = new(0f, 1f);
         shortGroup.SetActive(false);
 
-        var showButton = UIFactory.CreateButton(consoleGroup, "ConnectButton", "Show");
+        var showButton = UIFactory.CreateButton(consoleGroup, "ShowButton", "Show");
         buttonText = showButton.GameObject.transform.GetChild(0).GetComponent<Text>();
         buttonText.fontSize = 20;
         UIFactory.SetLayoutElement(showButton.GameObject, minHeight: 43, minWidth: 80);
@@ -144,7 +144,10 @@ public class ClientConsole : UniverseLib.UI.Panels.PanelBase
         shortGroup.SetActive(Hidden && Time.time - LastUpdateTime < HideTimeout);
 
         if (!oldScrollViewActive && scrollViewGroup.active)
+        {
             commandInput.Component.Select();
+            commandInput.Component.ActivateInputField();
+        }
 
         if (LogLines.Count > 0)
         {
@@ -175,10 +178,16 @@ public class ClientConsole : UniverseLib.UI.Panels.PanelBase
         }
 
         bool enter = InputManager.GetKeyDown(KeyCode.Return) || InputManager.GetKeyDown(KeyCode.KeypadEnter);
-        if (allowEnter && enter)
+        if (commandInputWasFocused && enter)
             SendCommand();
-        else
-            allowEnter = commandInput.Component.isFocused;
+
+        if (InputManager.GetMouseButtonDown(0) && commandInput.Component.isFocused &&
+                !HUD.RectContainsPoint(commandInput.Transform, InputManager.MousePosition))
+            commandInput.Component.DeactivateInputField();
+
+        if (commandInputWasFocused != commandInput.Component.isFocused)
+            OurInputManager.playerHasControl = !commandInput.Component.isFocused;
+        commandInputWasFocused = commandInput.Component.isFocused;
     }
 
     public override void SetDefaultSizeAndPosition()

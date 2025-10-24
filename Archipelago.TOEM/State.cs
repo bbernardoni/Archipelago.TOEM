@@ -1,6 +1,4 @@
-using System.Collections.Generic;
 using Archipelago.MultiClient.Net.Enums;
-using Newtonsoft.Json;
 
 namespace Archipelago.TOEM;
 
@@ -41,15 +39,14 @@ public class SlotData
 
 public class State
 {
-    public bool Valid;
-
     public string Uri;
     public string SlotName;
     public string Password;
     public string Seed;
     public SlotData SlotData;
-    public Dictionary<long, ApItemInfo> LocationInfos = [];
-    public List<long> CheckedLocations { get; set; } = [];
+    // Not sure what these were intended for
+    //public Dictionary<long, ApItemInfo> LocationInfos = [];
+    //public List<long> CheckedLocations { get; set; } = [];
     public int ItemIndex { get; set; } = 1;
 
     public State()
@@ -80,17 +77,14 @@ public class State
 
     public void ClearConnection()
     {
-        Valid = false;
-
         Seed = "";
         SlotData = null;
-        LocationInfos.Clear();
-        CheckedLocations.Clear();
+        //LocationInfos.Clear();
+        //CheckedLocations.Clear();
     }
 
     public void ClearSave()
     {
-        Valid = false;
         ItemIndex = 1;
     }
 }

@@ -10,7 +10,7 @@ public class Game
     public const string Name = "TOEM: A Photo Adventure";
 
     public Queue<ApItemInfo> IncomingItems { get; private set; } = new();
-    public Queue<ApItemInfo> IncomingMessages { get; private set; } = new();
+    //public Queue<ApItemInfo> IncomingMessages { get; private set; } = new();
     public List<long> OutgoingLocations { get; private set; } = new();
     public bool PendingCompletion { get; private set; } = false;
     public bool IsServerItem { get; set; } = false;

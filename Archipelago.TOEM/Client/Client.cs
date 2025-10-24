@@ -240,6 +240,9 @@ public class Client
         }
 
         Plugin.Logger.LogDebug($"New locations checked: {string.Join(", ", newCheckedLocations)}");
+        /*
+        // Not sure what this was intended for, maybe shortcutting awarding local items?
+        // Commented out since it's not functional or necessary
         foreach (var id in newCheckedLocations)
         {
             if (Plugin.State.LocationInfos.TryGetValue(id, out var itemInfo))
@@ -257,6 +260,7 @@ public class Client
             }
 
         }
+        */
     }
 
     public int GetCurrentPlayer()

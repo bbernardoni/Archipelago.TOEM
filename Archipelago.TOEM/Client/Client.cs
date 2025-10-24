@@ -11,7 +11,7 @@ namespace Archipelago.TOEM.Client;
 
 public class Client
 {
-    private const string MinArchipelagoVersion = "0.5.0";
+    private const string MinArchipelagoVersion = "0.6.0";
 
     public bool Connected => _session?.Socket.Connected ?? false;
     private bool _attemptingConnection;

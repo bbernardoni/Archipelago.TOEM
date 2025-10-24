@@ -1,10 +1,10 @@
-# Archipelago.TOEM
+# TOEM: A Photo Adventure for Archipelago
 
 Randomizer mod for TOEM: A Photo Adventure that integrates with [Archipelago](https://archipelago.gg)
 
 ## Installation
 
-Follow the [Setup Guide](https://github.com/drtchops/Archipelago/blob/toem/worlds/toem/docs/setup_en.md)
+Follow the [Setup Guide](https://github.com/bbernardoni/Archipelago/blob/toem/worlds/toem/docs/setup_en.md)
 
 ## Development
 

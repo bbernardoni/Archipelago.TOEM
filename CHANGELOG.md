@@ -19,8 +19,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - Added options to change stamp requirements per region
 - Lots of bug fixes
 
-## [0.4.0] - 2024-10-12
+## [1.0.0] - 2024-10-24
 
+- Official release!
 - Overhauled UI
     - Added a command input field
     - Improved focus handling (game no longer moves when processing input field typing)
+    - Prevent starting game when mouse down on the Archipelago UIs
+    - Pull up new game menu on client connection
+- Play sounds when awarding items from server

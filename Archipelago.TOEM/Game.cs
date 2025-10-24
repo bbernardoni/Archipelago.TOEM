@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Photographing;
 using Quests;
 using UnityEngine;
 
@@ -127,7 +128,7 @@ public class Game
         }
         else if (apItemId <= ApItemId.LastPhoto)
         {
-            // GivePhoto
+            GivePhoto();
         }
         else if (apItemId <= ApItemId.LastCassette)
         {
@@ -168,6 +169,16 @@ public class Game
             communityController.regionRequiredStamps.Text = $"{countToRequired}/{region.requiredStamps}";
             communityController.allRegionStampCount.Text = $"{region.currentStampCount}/{region.totalQuestCount}";
         }
+
+        communityController.gotStampJingleSound.PlaySound();
+        communityController.stampAppearSound.PlaySound();
+        communityController.stampCardSound.PlaySound();
+    }
+
+    private void GivePhoto()
+    {
+        // Photos are filler items any way so we don't do anything
+        CompendiumConfirmMenu.instance.newCompendiumItemSound.PlaySound();
     }
 
     private void GiveGameItem(string itemName)
@@ -179,6 +190,7 @@ public class Game
         else
             GameManager.PlayerInventory.AddItem(item);
         IsServerItem = false;
+        GetItemScreen.instance.getItemJingleSound.PlaySound();
     }
 
     public void CheckLocation(ApLocationId location)

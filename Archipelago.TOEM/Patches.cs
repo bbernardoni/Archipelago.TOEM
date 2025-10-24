@@ -409,3 +409,18 @@ internal class Achievement_CompleteQuestRegion_Patch
         return false;
     }
 }
+
+[HarmonyPatch(typeof(TitleScreenMenu))]
+internal class TitleScreenMenu_Patch
+{
+    [HarmonyPatch(nameof(TitleScreenMenu.Update))]
+    [HarmonyPrefix]
+    public static bool Update(TitleScreenMenu __instance)
+    {
+        if (__instance.menuState != TitleScreenMenu.MenuState.HasFadedIn || __instance.hasSaveFile)
+            return true;
+        if (!OurInputManager.Instance.PlayerPressedActionButtonDown())
+            return true;
+        return !HUD.MouseOverHUD();
+    }
+}

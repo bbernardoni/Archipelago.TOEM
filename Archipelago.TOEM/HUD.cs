@@ -51,6 +51,7 @@ public class HUD : UniverseLib.UI.Panels.PanelBase
     private GameObject DisconnectedUIObject;
     private static bool InputWasFocused;
     private static List<InputFieldRef> Inputs;
+    private static RectTransform ConnectionInfoRect;
 
     protected override void ConstructPanelContent()
     {
@@ -61,6 +62,7 @@ public class HUD : UniverseLib.UI.Panels.PanelBase
         ContentRoot.GetComponent<VerticalLayoutGroup>().spacing = 5;
         ContentRoot.GetComponent<LayoutElement>().flexibleHeight = 0;
         ContentRoot.GetComponent<RectTransform>().pivot = new(0f, 1f);
+        ConnectionInfoRect = ContentRoot.GetComponent<RectTransform>();
 
         Text modDisplayInfoText = UIFactory.CreateLabel(ContentRoot, "ModDisplayInfo", ModDisplayInfo, TextAnchor.MiddleCenter);
         UIFactory.SetLayoutElement(modDisplayInfoText.gameObject, minHeight: 16, flexibleWidth: 9999);
@@ -116,12 +118,17 @@ public class HUD : UniverseLib.UI.Panels.PanelBase
 
         var connectButton = UIFactory.CreateButton(DisconnectedUIObject, "ConnectButton", "Connect");
         UIFactory.SetLayoutElement(connectButton.GameObject, minHeight: 25, flexibleWidth: 9999);
-        connectButton.OnClick += Plugin.Client.Connect;
+        connectButton.OnClick += Connect;
 
         foreach (var rect in ContentRoot.GetComponentsInChildren<RectTransform>())
         {
             rect.pivot = new(0f, 1f);
         }
+    }
+
+    private void Connect()
+    {
+        Plugin.Client.Connect();
     }
 
     public override void Update()
@@ -201,5 +208,11 @@ public class HUD : UniverseLib.UI.Panels.PanelBase
     {
         return point.x >= rect.position.x && point.x <= (rect.position.x + rect.rect.width) &&
                point.y <= rect.position.y && point.y >= (rect.position.y - rect.rect.height);
+    }
+
+    public static bool MouseOverHUD()
+    {
+        return RectContainsPoint(ConnectionInfoRect, InputManager.MousePosition) ||
+            RectContainsPoint(ClientConsole.ClientConsoleRect, InputManager.MousePosition);
     }
 }

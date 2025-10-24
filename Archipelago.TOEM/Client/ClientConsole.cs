@@ -37,6 +37,7 @@ public class ClientConsole : UniverseLib.UI.Panels.PanelBase
     private static Text buttonText;
     private static InputFieldRef commandInput;
     private static bool commandInputWasFocused;
+    public static RectTransform ClientConsoleRect;
 
     protected override void ConstructPanelContent()
     {
@@ -48,6 +49,7 @@ public class ClientConsole : UniverseLib.UI.Panels.PanelBase
         ContentRoot.GetComponent<VerticalLayoutGroup>().spacing = 5;
         ContentRoot.GetComponent<LayoutElement>().flexibleHeight = 0;
         ContentRoot.GetComponent<RectTransform>().pivot = new(0f, 1f);
+        ClientConsoleRect = ContentRoot.GetComponent<RectTransform>();
 
         var consoleGroup = UIFactory.CreateHorizontalGroup(ContentRoot, "ConsoleGroup", false, false, true, true, 5, childAlignment: TextAnchor.UpperRight);
         consoleGroup.GetComponent<Image>().enabled = false;

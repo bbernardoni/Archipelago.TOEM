@@ -28,7 +28,7 @@ public class SlotOptions
     public int logcity_stamp_requirement { get; set; }
     public int kiiruberg_stamp_requirement { get; set; }
     public int basto_stamp_requirement { get; set; }
-    public bool honk_attachement_early { get; set; }
+    public bool honk_attachment_early { get; set; }
 }
 
 public class SlotData

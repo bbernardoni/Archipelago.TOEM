@@ -37,6 +37,7 @@ public class ClientConsole : UniverseLib.UI.Panels.PanelBase
     private static Text buttonText;
     private static InputFieldRef commandInput;
     private static bool commandInputWasFocused;
+    private static ButtonRef dummyButton;
     public static RectTransform ClientConsoleRect;
 
     protected override void ConstructPanelContent()
@@ -98,6 +99,8 @@ public class ClientConsole : UniverseLib.UI.Panels.PanelBase
         UIFactory.SetLayoutElement(showButton.GameObject, minHeight: 43, minWidth: 80);
         showButton.OnClick += ToggleConsole;
 
+        dummyButton = UIFactory.CreateButton(consoleGroup, "DummyButton", "");
+
         foreach (var rect in ContentRoot.GetComponentsInChildren<RectTransform>())
             rect.pivot = new(0f, 1f);
         foreach (var rect in scrollViewGroup.GetComponentsInChildren<RectTransform>())
@@ -149,6 +152,11 @@ public class ClientConsole : UniverseLib.UI.Panels.PanelBase
         {
             commandInput.Component.Select();
             commandInput.Component.ActivateInputField();
+        }
+        else if(oldScrollViewActive && !scrollViewGroup.active)
+        {
+            // dumb hack to deselect the hide/show button
+            dummyButton.Component.Select();
         }
 
         if (LogLines.Count > 0)

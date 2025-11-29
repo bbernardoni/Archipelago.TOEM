@@ -28,3 +28,16 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
     - Prevent starting game when mouse down on the Archipelago UIs
     - Pull up new game menu on client connection
 - Play sounds when awarding items from server
+
+## [1.0.1] - 2024-10-25
+
+- Bug fix to allow the include_basto option to be set to false
+
+## [1.0.2] - 2024-11-22
+
+- Bug fix prevent the show/hide console log button from retaining focus
+- Removed skip balancing from stamp items
+
+## [1.1.0] - 2024-11-22
+
+- Add option to make stamps progressive. Option set by default to encourage better default balancing.

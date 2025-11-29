@@ -122,7 +122,7 @@ public class Game
     private void GiveItem(ApItemId apItemId)
     {
         Plugin.Logger.LogDebug($"Got item {apItemId}");
-        if (apItemId <= ApItemId.LastStamp)
+        if (apItemId <= ApItemId.LastStamp || apItemId == ApItemId.ProgressiveStamp)
         {
             GiveStamp(Data.ApItemIdToQuestRegion[apItemId]);
         }
@@ -147,7 +147,43 @@ public class Game
 
     private void GiveStamp(Quest.QuestRegion stampRegion)
     {
-        var region = GameManager.instance.GetRegionData(stampRegion);
+        RegionData.RegionInfo region;
+        // Find region if stamp is progressive
+        if(stampRegion == Quest.QuestRegion.Generic)
+        {
+            List<Quest.QuestRegion> questRegions = [
+                Quest.QuestRegion.Home, Quest.QuestRegion.Forest, Quest.QuestRegion.Harbor,
+                Quest.QuestRegion.City, Quest.QuestRegion.Mountain,
+                ];
+            bool include_basto = Plugin.State.SlotData?.Options.include_basto ?? true;
+            if(include_basto)
+                questRegions.Add(Quest.QuestRegion.Resort);
+            foreach(Quest.QuestRegion questRegion in questRegions)
+            {
+                region = GameManager.instance.GetRegionData(questRegion);
+                if(region.currentStampCount < region.requiredStamps)
+                {
+                    stampRegion = questRegion;
+                    break;
+                }
+            }
+            if(stampRegion == Quest.QuestRegion.Generic)
+            {
+                foreach(Quest.QuestRegion questRegion in questRegions)
+                {
+                    region = GameManager.instance.GetRegionData(questRegion);
+                    if(region.currentStampCount < region.totalQuestCount)
+                    {
+                        stampRegion = questRegion;
+                        break;
+                    }
+                }
+                if(stampRegion == Quest.QuestRegion.Generic)
+                    stampRegion = Quest.QuestRegion.Resort;
+            }
+        }
+
+        region = GameManager.instance.GetRegionData(stampRegion);
         int stampIndex = region.currentStampCount;
         Vector2 stampPos = GetStampPosition(stampIndex);
         region.currentStampCount += 1;

@@ -22,6 +22,7 @@ public class SlotOptions
     public bool include_items { get; set; }
     public bool include_cassettes { get; set; }
     public bool include_achievements { get; set; }
+    public bool progressive_stamps { get; set; }
     public int homelanda_stamp_requirement { get; set; }
     public int oaklaville_stamp_requirement { get; set; }
     public int stanhamn_stamp_requirement { get; set; }

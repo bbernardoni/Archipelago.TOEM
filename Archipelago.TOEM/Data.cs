@@ -458,6 +458,7 @@ public enum ApItemId
     SailorsTuneTape,
     SongOfTheSeaTape,
     LastCassette = SongOfTheSeaTape,
+    ProgressiveStamp
 }
 
 public static class Data
@@ -855,6 +856,7 @@ public static class Data
         {ApItemId.StampLogcity, Quest.QuestRegion.City},
         {ApItemId.StampKiiruberg, Quest.QuestRegion.Mountain},
         {ApItemId.StampBasto, Quest.QuestRegion.Resort},
+        {ApItemId.ProgressiveStamp, Quest.QuestRegion.Generic},
     };
     
     public static readonly Dictionary<ApItemId, string> ApItemIdToItem = new() {

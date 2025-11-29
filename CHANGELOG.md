@@ -38,6 +38,6 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - Bug fix prevent the show/hide console log button from retaining focus
 - Removed skip balancing from stamp items
 
-## [1.1.0] - 2024-11-22
+## [1.1.0] - 2024-11-29
 
 - Add option to make stamps progressive. Option set by default to encourage better default balancing.

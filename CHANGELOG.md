@@ -41,3 +41,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## [1.1.0] - 2024-11-29
 
 - Add option to make stamps progressive. Option set by default to encourage better default balancing.
+
+## [1.1.1] - 2024-12-19
+
+- Bug fix where `progressive_stamp_requirements` was not instanced per world (and so all slots would share the same one)
+- Switched to building the .apworld with the "Build APWorlds" command in the launcher
+- Added cooldown on Stamp/Photo/Item get sounds

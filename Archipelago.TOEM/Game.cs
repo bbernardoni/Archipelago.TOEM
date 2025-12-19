@@ -17,6 +17,11 @@ public class Game
     public bool IsServerItem { get; set; } = false;
     public bool UnlockRegions { get; set; } = false;
 
+    private const float SoundCooldown = 1f;
+    private static float LastStampSound = -SoundCooldown;
+    private static float LastPhotoSound = -SoundCooldown;
+    private static float LastItemSound = -SoundCooldown;
+
     public void Update()
     {
         if (IncomingItems.TryDequeue(out var item))
@@ -206,15 +211,23 @@ public class Game
             communityController.allRegionStampCount.Text = $"{region.currentStampCount}/{region.totalQuestCount}";
         }
 
-        communityController.gotStampJingleSound.PlaySound();
-        communityController.stampAppearSound.PlaySound();
-        communityController.stampCardSound.PlaySound();
+        if(Time.time - LastStampSound > SoundCooldown)
+        {
+            communityController.gotStampJingleSound.PlaySound();
+            communityController.stampAppearSound.PlaySound();
+            communityController.stampCardSound.PlaySound();
+            LastStampSound = Time.time;
+        }
     }
 
     private void GivePhoto()
     {
         // Photos are filler items any way so we don't do anything
-        CompendiumConfirmMenu.instance.newCompendiumItemSound.PlaySound();
+        if(Time.time - LastPhotoSound > SoundCooldown)
+        {
+            CompendiumConfirmMenu.instance.newCompendiumItemSound.PlaySound();
+            LastPhotoSound = Time.time;
+        }
     }
 
     private void GiveGameItem(string itemName)
@@ -226,7 +239,11 @@ public class Game
         else
             GameManager.PlayerInventory.AddItem(item);
         IsServerItem = false;
-        GetItemScreen.instance.getItemJingleSound.PlaySound();
+        if(Time.time - LastItemSound > SoundCooldown)
+        {
+            GetItemScreen.instance.getItemJingleSound.PlaySound();
+            LastItemSound = Time.time;
+        }
     }
 
     public void CheckLocation(ApLocationId location)

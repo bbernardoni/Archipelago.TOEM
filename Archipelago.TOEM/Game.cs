@@ -16,6 +16,7 @@ public class Game
     public bool PendingCompletion { get; private set; } = false;
     public bool IsServerItem { get; set; } = false;
     public bool UnlockRegions { get; set; } = false;
+    public bool IsCmdTp { get; set; } = false;
 
     private const float SoundCooldown = 1f;
     private static float LastStampSound = -SoundCooldown;
@@ -127,7 +128,7 @@ public class Game
     private void GiveItem(ApItemId apItemId)
     {
         Plugin.Logger.LogDebug($"Got item {apItemId}");
-        if (apItemId <= ApItemId.LastStamp || apItemId == ApItemId.ProgressiveStamp)
+        if (apItemId <= ApItemId.LastStamp)
         {
             GiveStamp(Data.ApItemIdToQuestRegion[apItemId]);
         }
@@ -268,5 +269,53 @@ public class Game
         {
             PendingCompletion = true;
         }
+    }
+
+    public void ExecuteCommand(string command_str)
+    {
+        string[] command = command_str.Split(" ");
+        if(command.Length == 0)
+        {
+            Client.ClientConsole.LogMessage("No command found");
+        }
+        else if(command[0] == "help")
+        {
+            Client.ClientConsole.LogMessage("TODO add help output");
+        }
+        else if(command[0] == "tp")
+        {
+            if(command.Length != 3)
+                Client.ClientConsole.LogMessage("tp command takes three arguements");
+            else
+                TpCommand(command[1], int.Parse(command[2]));
+        }
+        else
+        {
+            Client.ClientConsole.LogMessage("Unknown command");
+        }
+    }
+
+    public void TpCommand(string sceneName, int transitionNodeIndex)
+    {
+        Client.ClientConsole.LogMessage($"Teleporting to scene {sceneName} ({transitionNodeIndex})");
+        string sceneDirectory = "";
+        foreach (var (prefix, directory) in Data.RegionSceneName)
+        {
+            if (sceneName.StartsWith(prefix))
+            {
+                sceneDirectory = directory;
+                break;
+            }
+        }
+        if(sceneName == "CosmoGarden")
+            sceneDirectory = "Mountain";
+        string scenePath = $"Assets/Scenes/{sceneDirectory}/{sceneName}.unity";
+        SceneReference sceneRef = new()
+        {
+            scenePath = scenePath
+        };
+        IsCmdTp = true;
+        SceneTransitionController.Instance.DoSceneTransition(sceneRef, transitionNodeIndex, LoadingIndicator.LoadingType.Standard);
+        IsCmdTp = false;
     }
 }

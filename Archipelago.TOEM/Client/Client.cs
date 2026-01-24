@@ -90,6 +90,8 @@ public class Client
     {
         var slotData = _session.DataStorage.GetSlotData<SlotData>();
         Plugin.State.SetupSession(slotData, _session.RoomState.Seed);
+        foreach(var (key, val) in Plugin.State.SlotData.Transitions)
+            Plugin.Logger.LogInfo($"{key}, {val}");
         Plugin.Game.ConnectSave();
         Plugin.UpdateConnectionInfo(Plugin.State.Uri, Plugin.State.SlotName, Plugin.State.Password);
         _ignoreLocations = false;

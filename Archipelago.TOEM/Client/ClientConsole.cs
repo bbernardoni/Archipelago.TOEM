@@ -120,7 +120,14 @@ public class ClientConsole : UniverseLib.UI.Panels.PanelBase
         string command = commandInput.Text;
         if (!string.IsNullOrWhiteSpace(command) && Plugin.Client.Connected)
         {
-            Plugin.Client.SendMessage(command);
+            if (command[0] != '/' && Plugin.Client.Connected)
+            {
+                Plugin.Client.SendMessage(command);
+            }
+            else
+            {
+                Plugin.Game.ExecuteCommand(command[1..]);
+            }
         }
         commandInput.Text = "";
     }

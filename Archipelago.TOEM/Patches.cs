@@ -2,6 +2,7 @@ using HarmonyLib;
 using Photographing;
 using Quests;
 using Dialogue;
+using System.Text.RegularExpressions;
 
 namespace Archipelago.TOEM;
 
@@ -421,5 +422,45 @@ internal class TitleScreenMenu_Patch
         if (!OurInputManager.Instance.PlayerPressedActionButtonDown())
             return true;
         return !HUD.MouseOverHUD();
+    }
+}
+
+[HarmonyPatch(typeof(SceneTransitionController))]
+internal class SceneTransitionController_Patch
+{
+    [HarmonyPatch(nameof(SceneTransitionController.DoSceneTransition))]
+    [HarmonyPrefix]
+    public static void DoSceneTransition(SceneReference sceneName, ref int transitionNodeIndex, ref LoadingIndicator.LoadingType loadingType)
+    {
+        Plugin.Logger.LogInfo($"SceneTransitionController.DoSceneTransition({sceneName.scenePath}, {transitionNodeIndex}, {loadingType})");
+        int entrance_randomization = Plugin.State.SlotData?.Options.entrance_randomization ?? 0;
+        if(Plugin.Game.IsCmdTp || loadingType != LoadingIndicator.LoadingType.Standard || entrance_randomization == 0)
+            return;
+        
+        var match = Regex.Match(sceneName.scenePath, @"Assets/Scenes/([A-Za-z]*)/([A-Za-z0-9_]*)\.unity");
+        string regionName = match.Groups[1].Value;
+        string sceneShortName = match.Groups[2].Value;
+        string sourceEntrance = Data.SceneTransitionToEntrance[sceneShortName][transitionNodeIndex];
+        Plugin.Logger.LogInfo($"Corresponding source entrance: {sourceEntrance}");
+        string targetEntrance = Plugin.State.SlotData.Transitions[sourceEntrance];
+        Plugin.Logger.LogInfo($"Randomized target entrance: {targetEntrance}");
+        var scenePair = Data.EntranceToSceneTransition[targetEntrance];
+        string targetSceneName = scenePair.Item1;
+        int newTransitionNodeIndex = scenePair.Item2;
+        Plugin.Logger.LogInfo($"Randomized scene: {targetSceneName} ({newTransitionNodeIndex})");
+
+        string sceneDirectory = "";
+        foreach (var (prefix, directory) in Data.RegionSceneName)
+        {
+            if (targetSceneName.StartsWith(prefix))
+            {
+                sceneDirectory = directory;
+                break;
+            }
+        }
+        if(targetSceneName == "CosmoGarden")
+            sceneDirectory = "Mountain";
+        sceneName.scenePath = $"Assets/Scenes/{sceneDirectory}/{targetSceneName}.unity";
+        transitionNodeIndex = newTransitionNodeIndex;
     }
 }

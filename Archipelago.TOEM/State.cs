@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Archipelago.MultiClient.Net.Enums;
 
 namespace Archipelago.TOEM;
@@ -30,12 +31,14 @@ public class SlotOptions
     public int kiiruberg_stamp_requirement { get; set; }
     public int basto_stamp_requirement { get; set; }
     public bool honk_attachment_early { get; set; }
+    public int entrance_randomization { get; set; }
 }
 
 public class SlotData
 {
     public string Version { get; set; }
     public SlotOptions Options { get; set; }
+    public Dictionary<string, string> Transitions { get; set; }
 }
 
 public class State

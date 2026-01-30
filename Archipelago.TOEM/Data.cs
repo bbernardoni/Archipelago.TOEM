@@ -593,7 +593,7 @@ public static class Data
         {"Portillo", ApLocationId.CompPortillo},
         {"Mouse", ApLocationId.CompMouse},
         {"Pigeon", ApLocationId.CompPigeon},
-        {"Punk Parrot", ApLocationId.CompPunkParrot},
+        {"Punky Parrot", ApLocationId.CompPunkParrot},
         {"Tato Skateboard", ApLocationId.CompTatoSkateboard},
         {"Tato Tourist", ApLocationId.CompTatoTourist},
         {"Turtle", ApLocationId.CompTurtle},

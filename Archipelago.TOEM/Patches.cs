@@ -29,17 +29,6 @@ internal class CommunityController_Patch
     }
 }
 
-// [HarmonyPatch(typeof(RegionData.RegionInfo))]
-// internal class RegionData_RegionInfo_Patch
-// {
-//     [HarmonyPatch(nameof(RegionData.RegionInfo.HasEnoughStampsForTicket))]
-//     [HarmonyPrefix]
-//     public static void HasEnoughStampsForTicket()
-//     {
-//         Plugin.Logger.LogInfo("RegionData.RegionInfo.HasEnoughStampsForTicket()");
-//     }
-// }
-
 [HarmonyPatch(typeof(GameManager))]
 internal class GameManager_Patch
 {
@@ -91,6 +80,7 @@ internal class SaveManager_Patch
             Plugin.State.ItemIndex = SaveManager._GameSave_k__BackingField[ItemIndexSaveKey];
             Plugin.Logger.LogInfo($"{nameof(ItemIndexSaveKey)}: {Plugin.State.ItemIndex}");
         }
+        Plugin.Game.UnlockRegions();
     }
 
     [HarmonyPatch(nameof(SaveManager.ResetGame))]
@@ -98,7 +88,7 @@ internal class SaveManager_Patch
     public static void ResetGame()
     {
         Plugin.Logger.LogInfo("SaveManager.ResetGame()");
-        Plugin.State.ClearSave();
+        Plugin.Game.SetupNewSave();
     }
 }
 
@@ -128,6 +118,15 @@ internal class MapMenu_Patch
 
         __instance.InitializeMap();
         return false;
+    }
+    
+    [HarmonyPatch(nameof(Menus.MapMenu.LoadUnlockedRegions))]
+    [HarmonyPostfix]
+    public static void LoadUnlockedRegions_Postfix()
+    {
+        Plugin.Logger.LogInfo($"Menus.MapMenu.LoadUnlockedRegions() Postfix");
+        Plugin.Game.UnlockRegions();
+        Plugin.Game.SetStampRequirements = true;
     }
 }
 

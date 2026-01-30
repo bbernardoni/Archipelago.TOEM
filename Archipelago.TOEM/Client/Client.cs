@@ -6,6 +6,7 @@ using Archipelago.MultiClient.Net;
 using Archipelago.MultiClient.Net.Enums;
 using Archipelago.MultiClient.Net.Helpers;
 using Archipelago.MultiClient.Net.MessageLog.Messages;
+using Archipelago.MultiClient.Net.Models;
 
 namespace Archipelago.TOEM.Client;
 
@@ -90,8 +91,6 @@ public class Client
     {
         var slotData = _session.DataStorage.GetSlotData<SlotData>();
         Plugin.State.SetupSession(slotData, _session.RoomState.Seed);
-        foreach(var (key, val) in Plugin.State.SlotData.Transitions)
-            Plugin.Logger.LogInfo($"{key}, {val}");
         Plugin.Game.ConnectSave();
         Plugin.UpdateConnectionInfo(Plugin.State.Uri, Plugin.State.SlotName, Plugin.State.Password);
         _ignoreLocations = false;
@@ -224,6 +223,22 @@ public class Client
     {
         var index = helper.Index;
         var item = helper.DequeueItem();
+        EnqueueItem(item, index);
+    }
+
+    public void ResendItems()
+    {
+        Plugin.Game.IncomingItems.Clear();
+        int index = 0;
+        foreach(var item in _session.Items.AllItemsReceived)
+        {
+            index++;
+            EnqueueItem(item, index);
+        }
+    }
+
+    public void EnqueueItem(ItemInfo item, int index)
+    {
         var itemName = item.ItemDisplayName;
         Plugin.Logger.LogInfo($"Received item #{index}: {item.ItemId} - {itemName}");
         var player = item.Player;

@@ -15,7 +15,7 @@ public class Game
     public List<long> OutgoingLocations { get; private set; } = new();
     public bool PendingCompletion { get; private set; } = false;
     public bool IsServerItem { get; set; } = false;
-    public bool UnlockRegions { get; set; } = false;
+    public bool SetStampRequirements { get; set; } = false;
     public bool IsCmdTp { get; set; } = false;
 
     private const float SoundCooldown = 1f;
@@ -25,24 +25,10 @@ public class Game
 
     public void Update()
     {
-        if (IncomingItems.TryDequeue(out var item))
-        {
-            if (item.Index < Plugin.State.ItemIndex)
-            {
-                Plugin.Logger.LogDebug($"Ignoring previously obtained item {item.Id}");
-            }
-            else
-            {
-                Plugin.State.ItemIndex++;
-                GiveItem((ApItemId)item.Id);
-            }
-        }
-        if (UnlockRegions && GameManager.instance.regionData.regionInfo.Count > 0)
+        if (SetStampRequirements)
         {
             foreach (var region in GameManager.instance.regionData.regionInfo)
             {
-                Plugin.Logger.LogInfo($"Setting {region.Name} unlocked");
-                region.isUnlocked = true;
                 switch (region.region)
                 {
                     case Quest.QuestRegion.Home:
@@ -65,7 +51,19 @@ public class Game
                         break;
                 }
             }
-            UnlockRegions = false;
+            SetStampRequirements = false;
+        }
+        if (IncomingItems.TryDequeue(out var item))
+        {
+            if (item.Index < Plugin.State.ItemIndex)
+            {
+                Plugin.Logger.LogDebug($"Ignoring previously obtained item {item.Id}");
+            }
+            else
+            {
+                Plugin.State.ItemIndex++;
+                GiveItem((ApItemId)item.Id);
+            }
         }
         if (Plugin.Client.Connected)
         {
@@ -82,6 +80,12 @@ public class Game
     public void SetupNewSave()
     {
         Plugin.State.ClearSave();
+        UnlockRegions();
+        if(Plugin.Client.Connected)
+        {
+            SetStampRequirements = true;
+            Plugin.Client.ResendItems();
+        }
     }
 
     public void ConnectSave()
@@ -95,7 +99,7 @@ public class Game
             if (Plugin.State.SlotData.Options.include_achievements)
                 titleScreenMenu.keepAchievementsOption.ToggleOn(); // "On" means reset achievements
         }
-        UnlockRegions = true;
+        SetStampRequirements = true;
         SyncLocations();
     }
 
@@ -268,6 +272,15 @@ public class Game
         else
         {
             PendingCompletion = true;
+        }
+    }
+
+    public void UnlockRegions()
+    {
+        foreach (var region in GameManager.instance.regionData.regionInfo)
+        {
+            Plugin.Logger.LogInfo($"Setting {region.Name} unlocked");
+            region.isUnlocked = true;
         }
     }
 

@@ -206,6 +206,16 @@ internal class PlayerInventory_Patch
         Plugin.Game.CheckLocation(apLocation);
         return false;
     }
+    
+    [HarmonyPatch(nameof(PlayerInventory.RemoveItem))]
+    [HarmonyPrefix]
+    public static bool RemoveItem(Item_SO itemToRemove, int count)
+    {
+        // Prevent pirate hat switching from removing an item that might be needed for the Cosplayer achievement
+        if(itemToRemove.jsonSaveKey == "PirateHat" || itemToRemove.jsonSaveKey == "PaperHat")
+            return false;
+        return true;
+    }
 }
 
 [HarmonyPatch(typeof(GetItemScreen))]

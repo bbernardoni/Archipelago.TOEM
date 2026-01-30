@@ -269,7 +269,8 @@ internal class InventoryHasItem_Patch
             return true;
         if (apLocation != ApLocationId.ItemAwardMask && apLocation != ApLocationId.ItemGhostGlasses &&
                 apLocation != ApLocationId.ItemSandwich && apLocation != ApLocationId.ItemFrisbee &&
-                apLocation != ApLocationId.ItemFootCast)
+                apLocation != ApLocationId.ItemFootCast && 
+                !(apLocation == ApLocationId.ItemBastoTicket && __instance.name == "Note From Grandma - Resort"))
             return true;
 
         Plugin.Logger.LogInfo($"InventoryHasItem.ExecuteEvent() : {__instance.item.jsonSaveKey}");
@@ -339,7 +340,8 @@ internal class CheckItemNode_Patch
         {
             bool found = Data.ItemToApLocationId.TryGetValue(item.jsonSaveKey, out var apLocation);
             if (found && (apLocation == ApLocationId.ItemTripod || apLocation == ApLocationId.ItemFlag ||
-                    apLocation == ApLocationId.ItemSkiGoggles || apLocation == ApLocationId.ItemScarf))
+                    apLocation == ApLocationId.ItemSkiGoggles || apLocation == ApLocationId.ItemScarf ||
+                    apLocation == ApLocationId.ItemBastoTicket))
             {
                 __result = Plugin.Client.IsLocationChecked((long)apLocation);
                 return false;

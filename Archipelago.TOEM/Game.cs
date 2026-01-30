@@ -287,29 +287,55 @@ public class Game
     public void ExecuteCommand(string command_str)
     {
         string[] command = command_str.Split(" ");
-        if(command.Length == 0)
+        if(command[0] == "help")
         {
-            Client.ClientConsole.LogMessage("No command found");
-        }
-        else if(command[0] == "help")
-        {
-            Client.ClientConsole.LogMessage("TODO add help output");
+            Client.ClientConsole.LogMessage("Use '!help' for server commands.");
+            Client.ClientConsole.LogMessage("Only dev commands supported for now. If you have any ideas for local user commands post in the AP discord Toem channel.");
         }
         else if(command[0] == "tp")
         {
             if(command.Length != 3)
-                Client.ClientConsole.LogMessage("tp command takes three arguements");
+            {
+                Client.ClientConsole.LogMessage("tp command takes two arguements '/tp <sceneName> <transitionNodeIndex>'");
+            }
             else
-                TpCommand(command[1], int.Parse(command[2]));
+            {
+                int transitionNodeIndex;
+                if(int.TryParse(command[2], out transitionNodeIndex))
+                    TpCommand(command[1], transitionNodeIndex);
+                else
+                    Client.ClientConsole.LogMessage("tp command's second argument must be an integer");
+            }
+        }
+        else if(command[0] == "turbo")
+        {
+            int newSpeed = 20;
+            if(command.Length > 1)
+                int.TryParse(command[1], out newSpeed);
+
+            PlayerController.Instance.moveSpeed = newSpeed;
         }
         else
         {
-            Client.ClientConsole.LogMessage("Unknown command");
+            Client.ClientConsole.LogMessage("Unknown command. See /help for list of supported commands.");
         }
     }
 
     public void TpCommand(string sceneName, int transitionNodeIndex)
     {
+        if (!Data.SceneTransitionToEntrance.ContainsKey(sceneName))
+        {
+            Client.ClientConsole.LogMessage("Unknown sceneName for tp command");
+            return;
+        }
+        var sceneEntry = Data.SceneTransitionToEntrance[sceneName];
+        if (!sceneEntry.ContainsKey(transitionNodeIndex))
+        {
+            Client.ClientConsole.LogMessage("Unknown transitionNodeIndex for tp command");
+            Client.ClientConsole.LogMessage("Valid indices: "+string.Join(",", sceneEntry.Keys));
+            return;
+        }
+
         Client.ClientConsole.LogMessage($"Teleporting to scene {sceneName} ({transitionNodeIndex})");
         string sceneDirectory = "";
         foreach (var (prefix, directory) in Data.RegionSceneName)

@@ -47,3 +47,18 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - Bug fix where `progressive_stamp_requirements` was not instanced per world (and so all slots would share the same one)
 - Switched to building the .apworld with the "Build APWorlds" command in the launcher
 - Added cooldown on Stamp/Photo/Item get sounds
+
+## [1.9.0] - 2024-02-01
+
+- Entrance Randomizer beta!
+    - Adds one ER mode of randomizing entrances within each region
+    - Most room transitions are randomized (exceptions are Stanhamn raft and Kiiruberg ski lift)
+- Implemented basic UT integration
+    - Allows yamless support
+    - Supports deferred entrances
+- Removes randomizing cassettes as they are not ready for the beta
+- Bugfix: Many logic bugs corrected in ER logic overhaul
+- Bugfix: Fix initial connection to server where some items have already been received
+- Bugfix: Trading hats with the pirate queen no longer takes away your old hat
+- Bugfix: Turning in multiple fruits to the ice cream vendor awards all locations not just the last one
+- Bugfix: Punky parrot location check now functional

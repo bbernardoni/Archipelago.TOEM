@@ -56,6 +56,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - Implemented basic UT integration
     - Allows yamless support
     - Supports deferred entrances
+- Randomizes Basto express ticket which allows for reaching Basto earlier
 - Removes randomizing cassettes as they are not ready for the beta
 - Bugfix: Many logic bugs corrected in ER logic overhaul
 - Bugfix: Fix initial connection to server where some items have already been received

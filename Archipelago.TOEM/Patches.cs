@@ -130,20 +130,6 @@ internal class MapMenu_Patch
     }
 }
 
-[HarmonyPatch(typeof(QuestManager))]
-internal class QuestManager_Patch
-{
-    internal static string LastUpdatedQuest;
-
-    [HarmonyPatch(nameof(QuestManager.AddQuestStatus))]
-    [HarmonyPrefix]
-    public static void AddQuestStatus(Quest questToSave)
-    {
-        Plugin.Logger.LogInfo($"QuestManager.AddQuestStatus({questToSave.jsonSaveKey}), status: {questToSave.currentStatus}");
-        LastUpdatedQuest = questToSave.jsonSaveKey;
-    }
-}
-
 [HarmonyPatch(typeof(PhotoCompendium))]
 internal class PhotoCompendium_Patch
 {
@@ -189,21 +175,29 @@ internal class PlayerInventory_Patch
         if (apLocation == ApLocationId.ItemEmptyBottle && Plugin.Client.IsLocationChecked((long)apLocation))
             return true;
 
+        // Check ice creams individually
         if (apLocation == ApLocationId.ItemIceCreamBanakin)
         {
-            if (QuestManager_Patch.LastUpdatedQuest == "Fruit - Banana")
-                apLocation = ApLocationId.ItemIceCreamBanakin;
-            else if (QuestManager_Patch.LastUpdatedQuest == "Fruit - Pear")
-                apLocation = ApLocationId.ItemIceCreamMelonear;
-            else if (QuestManager_Patch.LastUpdatedQuest == "Fruit - Bean")
-                apLocation = ApLocationId.ItemIceCreamBeanut;
-            else if (QuestManager_Patch.LastUpdatedQuest == "Fruit - Orange")
-                apLocation = ApLocationId.ItemIceCreamOranganas;
-            else
-                Plugin.Logger.LogError($"Can't determine which fruit was turned into ice cream. LastUpdatedQuest: {QuestManager_Patch.LastUpdatedQuest}");
+            foreach(var quest in GameManager.QuestDatabase.resortRegionQuests)
+            {
+                if (quest.currentStatus == Quest.QuestStatus.Completed)
+                {
+                    if (quest.jsonSaveKey == "Fruit - Banana")
+                        Plugin.Game.CheckLocation(ApLocationId.ItemIceCreamBanakin);
+                    else if (quest.jsonSaveKey == "Fruit - Pear")
+                        Plugin.Game.CheckLocation(ApLocationId.ItemIceCreamMelonear);
+                    else if (quest.jsonSaveKey == "Fruit - Bean")
+                        Plugin.Game.CheckLocation(ApLocationId.ItemIceCreamBeanut);
+                    else if (quest.jsonSaveKey == "Fruit - Orange")
+                        Plugin.Game.CheckLocation(ApLocationId.ItemIceCreamOranganas);
+                }
+            }
+        }
+        else
+        {
+            Plugin.Game.CheckLocation(apLocation);
         }
 
-        Plugin.Game.CheckLocation(apLocation);
         return false;
     }
     

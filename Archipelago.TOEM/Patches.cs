@@ -467,5 +467,6 @@ internal class SceneTransitionController_Patch
             sceneDirectory = "Mountain";
         sceneName.scenePath = $"Assets/Scenes/{sceneDirectory}/{targetSceneName}.unity";
         transitionNodeIndex = newTransitionNodeIndex;
+        Plugin.Client.TraverseEntrance(sourceEntrance);
     }
 }

@@ -217,6 +217,23 @@ internal class PlayerInventory_Patch
             return false;
         return true;
     }
+    
+    [HarmonyPatch(nameof(PlayerInventory.ContainsItem))]
+    [HarmonyPrefix]
+    public static bool ContainsItem(Item_SO itemToCheck, ref bool __result)
+    {
+        // Make game determine if we have a cassette based on if location checked rather than if item is present
+        bool include_cassettes = Plugin.State.SlotData?.Options.include_cassettes ?? true;
+        if(include_cassettes && PlayMusic_Patch.CheckingCassette && itemToCheck.category == Item_SO.ItemCategory.Cassette){
+            bool found = Data.CassetteToApLocationId.TryGetValue(itemToCheck.jsonSaveKey, out var apLocation);
+            if (found)
+            {
+                __result = Plugin.Client.IsLocationChecked((long)apLocation);
+                return false;
+            }
+        }
+        return true;
+    }
 }
 
 [HarmonyPatch(typeof(GetItemScreen))]
@@ -374,9 +391,7 @@ internal class CheckItemNode_Patch
     public static bool EvaluateConditions(CheckItemNode __instance, ref bool __result)
     {
         bool include_items = Plugin.State.SlotData?.Options.include_items ?? true;
-        if (!include_items)
-            return true;
-
+        if (include_items){
         foreach (var item in __instance.itemsToCheckFor)
         {
             bool found = Data.ItemToApLocationId.TryGetValue(item.jsonSaveKey, out var apLocation);
@@ -384,8 +399,24 @@ internal class CheckItemNode_Patch
                     apLocation == ApLocationId.ItemSkiGoggles || apLocation == ApLocationId.ItemScarf ||
                     apLocation == ApLocationId.ItemBastoTicket))
             {
+                    Plugin.Logger.LogInfo($"CheckItemNode.EvaluateConditions() : {item.jsonSaveKey}");
+                    __result = Plugin.Client.IsLocationChecked((long)apLocation);
+                    return false;
+                }
+            }
+        }
+
+        bool include_cassettes = Plugin.State.SlotData?.Options.include_cassettes ?? true;
+        if (include_cassettes){
+            foreach (var item in __instance.itemsToCheckFor)
+            {
+                bool found = Data.CassetteToApLocationId.TryGetValue(item.jsonSaveKey, out var apLocation);
+                if (found && (apLocation == ApLocationId.TapeSquirrelHotel))
+                {
+                    Plugin.Logger.LogInfo($"CheckItemNode.EvaluateConditions() : {item.jsonSaveKey}");
                 __result = Plugin.Client.IsLocationChecked((long)apLocation);
                 return false;
+                }
             }
         }
 
@@ -464,6 +495,40 @@ internal class TitleScreenMenu_Patch
         if (!OurInputManager.Instance.PlayerPressedActionButtonDown())
             return true;
         return !HUD.MouseOverHUD();
+    }
+}
+
+[HarmonyPatch(typeof(PlayMusic))]
+internal class PlayMusic_Patch
+{
+    static public bool CheckingCassette = false;
+
+    [HarmonyPatch(nameof(PlayMusic.Start))]
+    [HarmonyPrefix]
+    public static void Start()
+    {
+        CheckingCassette = true;
+    }
+
+    [HarmonyPatch(nameof(PlayMusic.Start))]
+    [HarmonyPostfix]
+    public static void Start_Postfix()
+    {
+        CheckingCassette = false;
+    }
+
+    [HarmonyPatch(nameof(PlayMusic.TriggerTrack))]
+    [HarmonyPrefix]
+    public static void TriggerTrack()
+    {
+        CheckingCassette = true;
+    }
+
+    [HarmonyPatch(nameof(PlayMusic.TriggerTrack))]
+    [HarmonyPostfix]
+    public static void TriggerTrack_Postfix()
+    {
+        CheckingCassette = false;
     }
 }
 

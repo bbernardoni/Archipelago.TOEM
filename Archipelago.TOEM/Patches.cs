@@ -150,6 +150,8 @@ internal class PhotoCompendium_Patch
 [HarmonyPatch(typeof(PlayerInventory))]
 internal class PlayerInventory_Patch
 {
+    static public bool BastoTicketFound = false;
+
     [HarmonyPatch(nameof(PlayerInventory.AddItem))]
     [HarmonyPrefix]
     public static bool AddItem(Item_SO itemToAdd, int count, bool addedFromSaveFile)
@@ -196,6 +198,11 @@ internal class PlayerInventory_Patch
         else
         {
             Plugin.Game.CheckLocation(apLocation);
+            if(apLocation == ApLocationId.ItemBastoTicket)
+            {
+                BastoTicketFound = true;
+                PlayerInventory.onItemAdded.Invoke(itemToAdd);
+            }
         }
 
         return false;
@@ -283,6 +290,36 @@ internal class InventoryHasItem_Patch
             if (!__instance.executeMoreThanOnce)
             {
                 __instance.hasBeenTriggered = true;
+            }
+            __instance.hasItem.Invoke();
+        }
+        else
+        {
+            __instance.hasNotItem.Invoke();
+        }
+        return false;
+    }
+
+    [HarmonyPatch(nameof(InventoryHasItem.ExecuteEvent), [typeof(Item_SO)])]
+    [HarmonyPrefix]
+    public static bool ExecuteEvent(InventoryHasItem __instance, Item_SO addedItem)
+    {
+        bool include_items = Plugin.State.SlotData?.Options.include_items ?? true;
+        bool found = Data.ItemToApLocationId.TryGetValue(__instance.item.jsonSaveKey, out var apLocation);
+        if (!found || !include_items || __instance.hasBeenTriggered || __instance.item != addedItem)
+            return true;
+        if (apLocation != ApLocationId.ItemBastoTicket)
+            return true;
+
+        Plugin.Logger.LogInfo($"InventoryHasItem.ExecuteEvent({addedItem.jsonSaveKey}) : {__instance.item.jsonSaveKey}");
+        if (Plugin.Client.IsLocationChecked((long)apLocation) || PlayerInventory_Patch.BastoTicketFound)
+        {
+            if (!__instance.executeMoreThanOnce)
+            {
+                __instance.hasBeenTriggered = true;
+                // I don't think this is correct, but it also doesn't seem to cause issues
+                PlayerInventory.onItemAdded -= (Action<Item_SO>)__instance.ExecuteEvent;
+                PlayerInventory.onItemRemoved -= (Action<Item_SO>)__instance.ExecuteEvent;
             }
             __instance.hasItem.Invoke();
         }

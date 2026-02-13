@@ -305,9 +305,9 @@ public class Client
         _session?.Say(message);
     }
 
-    public void TraverseEntrance(string entrance)
+    public void TraverseEntrance(int entrance)
     {
-        List<string> traversedEntrances = _session.DataStorage[Scope.Slot, "TraversedEntrances"];
+        List<int> traversedEntrances = _session.DataStorage[Scope.Slot, "TraversedEntrances"];
         if(!traversedEntrances.Contains(entrance))
         {
             traversedEntrances.Add(entrance);

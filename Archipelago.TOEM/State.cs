@@ -38,7 +38,7 @@ public class SlotData
 {
     public string Version { get; set; }
     public SlotOptions Options { get; set; }
-    public Dictionary<string, string> Transitions { get; set; }
+    public Dictionary<int, int> Transitions { get; set; }
 }
 
 public class State

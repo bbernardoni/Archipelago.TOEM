@@ -547,9 +547,9 @@ internal class SceneTransitionController_Patch
         var match = Regex.Match(sceneName.scenePath, @"Assets/Scenes/([A-Za-z]*)/([A-Za-z0-9_]*)\.unity");
         string regionName = match.Groups[1].Value;
         string sceneShortName = match.Groups[2].Value;
-        string sourceEntrance = Data.SceneTransitionToEntrance[sceneShortName][transitionNodeIndex];
+        ApConnectionId sourceEntrance = Data.SceneTransitionToEntrance[sceneShortName][transitionNodeIndex];
         Plugin.Logger.LogInfo($"Corresponding source entrance: {sourceEntrance}");
-        string targetEntrance = Plugin.State.SlotData.Transitions[sourceEntrance];
+        ApConnectionId targetEntrance = (ApConnectionId)Plugin.State.SlotData.Transitions[(int)sourceEntrance];
         Plugin.Logger.LogInfo($"Randomized target entrance: {targetEntrance}");
         var scenePair = Data.EntranceToSceneTransition[targetEntrance];
         string targetSceneName = scenePair.Item1;
@@ -569,6 +569,6 @@ internal class SceneTransitionController_Patch
             sceneDirectory = "Mountain";
         sceneName.scenePath = $"Assets/Scenes/{sceneDirectory}/{targetSceneName}.unity";
         transitionNodeIndex = newTransitionNodeIndex;
-        Plugin.Client.TraverseEntrance(sourceEntrance);
+        Plugin.Client.TraverseEntrance((int)sourceEntrance);
     }
 }

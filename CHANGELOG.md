@@ -63,3 +63,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - Bugfix: Trading hats with the pirate queen no longer takes away your old hat
 - Bugfix: Turning in multiple fruits to the ice cream vendor awards all locations not just the last one
 - Bugfix: Punky parrot location check now functional
+
+## [2.0.0] - 2024-02-26
+
+- Reimplments Cassettes with new ER logic
+- Added version checks for Client and UT
+- Adjust min connection window size for lower resolutions
+- Make ER data more memory efficient
+- Bugfix: Cassettes locations trigger properly if item is already received
+- Bugfix: Added logic for raft being fixed with electricity
+- Bugfix: Basto ticket now properly unlocks house exit

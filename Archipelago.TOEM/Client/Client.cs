@@ -90,6 +90,12 @@ public class Client
     private void OnConnect()
     {
         var slotData = _session.DataStorage.GetSlotData<SlotData>();
+        if(slotData.Version != MyPluginInfo.PLUGIN_VERSION)
+        {
+            Plugin.Logger.LogError($"Incompatible client version. Client version ({MyPluginInfo.PLUGIN_VERSION}) does not match the APWorld version ({slotData.Version}) used during generation. Please install client version {slotData.Version}.");
+            Disconnect();
+            return;
+        }
         Plugin.State.SetupSession(slotData, _session.RoomState.Seed);
         Plugin.Game.ConnectSave();
         Plugin.UpdateConnectionInfo(Plugin.State.Uri, Plugin.State.SlotName, Plugin.State.Password);

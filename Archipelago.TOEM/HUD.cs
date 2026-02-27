@@ -42,7 +42,7 @@ public class HUD : UniverseLib.UI.Panels.PanelBase
 
     public override string Name => "Connection Info";
     public override int MinWidth => 300;
-    public override int MinHeight => 48;
+    public override int MinHeight => 164;
     public override Vector2 DefaultAnchorMin => new(0f, 0.85f);
     public override Vector2 DefaultAnchorMax => new(0.15f, 1f);
     public override bool CanDragAndResize => false;
@@ -52,6 +52,7 @@ public class HUD : UniverseLib.UI.Panels.PanelBase
     private static bool InputWasFocused;
     private static List<InputFieldRef> Inputs;
     private static RectTransform ConnectionInfoRect;
+    public Vector2 ParentSize;
 
     protected override void ConstructPanelContent()
     {
@@ -149,6 +150,12 @@ public class HUD : UniverseLib.UI.Panels.PanelBase
         if (InputWasFocused != InputIsFocused)
             OurInputManager.playerHasControl = !InputIsFocused;
         InputWasFocused = InputIsFocused;
+
+        if(ParentSize != UiBase.Canvas.pixelRect.size)
+        {
+            ParentSize = UiBase.Canvas.pixelRect.size;
+            SetDefaultSizeAndPosition();
+        }
     }
 
     private void OnHostInput(string input)

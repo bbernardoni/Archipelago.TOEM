@@ -55,13 +55,14 @@ public class Game
         }
         if (IncomingItems.TryDequeue(out var item))
         {
-            if (item.Index < Plugin.State.ItemIndex)
+            if (item.Index < Plugin.State.ItemIndex /*&& !HasItem((ApItemId)item.Id)*/)
             {
                 Plugin.Logger.LogDebug($"Ignoring previously obtained item {item.Id}");
             }
             else
             {
-                Plugin.State.ItemIndex++;
+                if(item.Index >= Plugin.State.ItemIndex)
+                    Plugin.State.ItemIndex++;
                 GiveItem((ApItemId)item.Id);
             }
         }
@@ -144,6 +145,25 @@ public class Game
         {
             GiveGameItem(Data.ApItemIdToItem[apItemId]);
         }
+    }
+
+    private bool HasItem(ApItemId apItemId)
+    {
+        // TODO
+        if (apItemId <= ApItemId.LastStamp)
+        {
+            //GiveStamp(Data.ApItemIdToQuestRegion[apItemId]);
+        }
+        else if (apItemId <= ApItemId.LastPhoto)
+        {
+            return true;
+        }
+        else if (apItemId <= ApItemId.LastCassette)
+        {
+            //return GameManager.PlayerInventory.ContainsItem(Data.ApItemIdToItem[apItemId]);
+            //GiveGameItem(Data.ApItemIdToItem[apItemId]);
+        }
+        return true;
     }
 
     private Vector2 GetStampPosition(int index)
@@ -315,6 +335,14 @@ public class Game
 
             PlayerController.Instance.moveSpeed = newSpeed;
         }
+        else if(command[0] == "asdf")
+        {
+            int num = 0;
+            if(command.Length > 1)
+                int.TryParse(command[1], out num);
+                
+            
+        }
         else
         {
             Client.ClientConsole.LogMessage("Unknown command. See /help for list of supported commands.");
@@ -356,5 +384,25 @@ public class Game
         IsCmdTp = true;
         SceneTransitionController.Instance.DoSceneTransition(sceneRef, transitionNodeIndex, LoadingIndicator.LoadingType.Standard);
         IsCmdTp = false;
+    }
+
+    public void TpRaft(string scenePath)
+    {
+        SceneReference sceneRef = new()
+        {
+            scenePath = scenePath
+        };
+        SceneTransitionController._Instance_k__BackingField.DoSceneTransitionEvent(sceneRef, LoadingIndicator.LoadingType.Standard);
+        RaftController.satAtBenchIndex = 0;
+        var sitState = PlayerController.Instance.sitState;
+        sitState.sitTarget = PlayerController.Instance.transform;
+        PlayerController.Instance.ChangePlayerState(sitState);
+
+        var companion = RaftController.GetLostDogCompanion();
+        if (companion.isActive)
+        {
+            companion.companionControllerScript.SetFollowTarget(PlayerController.Instance.transform);
+        }
+
     }
 }

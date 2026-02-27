@@ -3,6 +3,7 @@ using Photographing;
 using Quests;
 using Dialogue;
 using System.Text.RegularExpressions;
+using Il2CppSystem;
 
 namespace Archipelago.TOEM;
 
@@ -392,13 +393,13 @@ internal class CheckItemNode_Patch
     {
         bool include_items = Plugin.State.SlotData?.Options.include_items ?? true;
         if (include_items){
-        foreach (var item in __instance.itemsToCheckFor)
-        {
-            bool found = Data.ItemToApLocationId.TryGetValue(item.jsonSaveKey, out var apLocation);
-            if (found && (apLocation == ApLocationId.ItemTripod || apLocation == ApLocationId.ItemFlag ||
-                    apLocation == ApLocationId.ItemSkiGoggles || apLocation == ApLocationId.ItemScarf ||
-                    apLocation == ApLocationId.ItemBastoTicket))
+            foreach (var item in __instance.itemsToCheckFor)
             {
+                bool found = Data.ItemToApLocationId.TryGetValue(item.jsonSaveKey, out var apLocation);
+                if (found && (apLocation == ApLocationId.ItemTripod || apLocation == ApLocationId.ItemFlag ||
+                        apLocation == ApLocationId.ItemSkiGoggles || apLocation == ApLocationId.ItemScarf ||
+                        apLocation == ApLocationId.ItemBastoTicket))
+                {
                     Plugin.Logger.LogInfo($"CheckItemNode.EvaluateConditions() : {item.jsonSaveKey}");
                     __result = Plugin.Client.IsLocationChecked((long)apLocation);
                     return false;
@@ -414,8 +415,8 @@ internal class CheckItemNode_Patch
                 if (found && (apLocation == ApLocationId.TapeSquirrelHotel))
                 {
                     Plugin.Logger.LogInfo($"CheckItemNode.EvaluateConditions() : {item.jsonSaveKey}");
-                __result = Plugin.Client.IsLocationChecked((long)apLocation);
-                return false;
+                    __result = Plugin.Client.IsLocationChecked((long)apLocation);
+                    return false;
                 }
             }
         }
@@ -570,5 +571,13 @@ internal class SceneTransitionController_Patch
         sceneName.scenePath = $"Assets/Scenes/{sceneDirectory}/{targetSceneName}.unity";
         transitionNodeIndex = newTransitionNodeIndex;
         Plugin.Client.TraverseEntrance((int)sourceEntrance);
+    }
+
+    
+    [HarmonyPatch(nameof(SceneTransitionController.DoSceneTransitionEvent))]
+    [HarmonyPrefix]
+    public static void DoSceneTransitionEvent(SceneReference sceneName, LoadingIndicator.LoadingType loadingType)
+    {
+        Plugin.Logger.LogInfo($"SceneTransitionController.DoSceneTransitionEvent({sceneName.scenePath}, {loadingType})");
     }
 }

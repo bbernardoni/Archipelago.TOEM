@@ -87,10 +87,16 @@ public class Client
         OnConnect();
     }
 
+    private static string ParseMajorVersion(string version)
+    {
+        int last_dot = version.LastIndexOf(".");
+        return version[..last_dot];
+    }
+
     private void OnConnect()
     {
         var slotData = _session.DataStorage.GetSlotData<SlotData>();
-        if(slotData.Version != MyPluginInfo.PLUGIN_VERSION)
+        if(ParseMajorVersion(slotData.Version) != ParseMajorVersion(MyPluginInfo.PLUGIN_VERSION))
         {
             Plugin.Logger.LogError($"Incompatible client version. Client version ({MyPluginInfo.PLUGIN_VERSION}) does not match the APWorld version ({slotData.Version}) used during generation. Please install client version {slotData.Version}.");
             Disconnect();

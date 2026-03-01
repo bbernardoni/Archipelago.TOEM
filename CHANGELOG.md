@@ -73,3 +73,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - Bugfix: Cassettes locations trigger properly if item is already received
 - Bugfix: Added logic for raft being fixed with electricity
 - Bugfix: Basto ticket now properly unlocks house exit
+
+## [2.0.1] - 2024-03-01
+
+- Client version check now allows any patch version (aka, the 2.0.1 will work on any apworld with version 2.0.x)
+- Bugfix: Basto disabled option works again (was giving key error on gen)
+- Bugfix: Fixed bad entrance logic when progressive stamps are off

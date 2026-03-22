@@ -89,6 +89,6 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## [2.0.3] - 2026-03-22
 
 - No apworld change from 2.0.2 (so you don't need to update apworld if already on 2.0.2)
-- Bugfix: Make TraversedEntrances in DataStorage updated async. Might fix the ER transistion breaking bug
+- Bugfix: Make TraversedEntrances in DataStorage updated async. Might fix the ER transition breaking bug
 - Bugfix: Have Basto item checks not use IsLocationChecked when Basto is disabled
 - Bugfix: Allow checking the water popper location if gate is already opened

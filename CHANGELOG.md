@@ -88,5 +88,6 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [2.0.3] - 2026-03-
 
-- Bugfix: Make TraversedEntrances in DataStorage updated async. Might fix the ER transistion breaking bug.
-- Bugfix: Have Basto item checks not use IsLocationChecked when Basto is disabled.
+- Bugfix: Make TraversedEntrances in DataStorage updated async. Might fix the ER transistion breaking bug
+- Bugfix: Have Basto item checks not use IsLocationChecked when Basto is disabled
+- Bugfix: Allow checking the water popper location if gate is already opened

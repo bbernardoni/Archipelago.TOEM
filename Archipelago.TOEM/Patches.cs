@@ -431,6 +431,65 @@ internal class CheckItemNode_Patch
     }
 }
 
+[HarmonyPatch(typeof(CheckQuestStatusNode))]
+internal class CheckQuestStatusNode_Patch
+{
+    [HarmonyPatch(nameof(CheckQuestStatusNode.EvaluateConditions))]
+    [HarmonyPrefix]
+    public static bool EvaluateConditions(CheckQuestStatusNode __instance, ref bool __result)
+    {
+        bool include_items = Plugin.State.SlotData?.Options.include_items ?? true;
+        bool include_basto = Plugin.State.SlotData?.Options.include_basto ?? true;
+        if (!include_items || !include_basto)
+            return true;
+
+        var questToCheck = __instance.questToCheck;
+        if (questToCheck.jsonSaveKey == "Kiosky Gate -Backend Quest")
+        {
+            Plugin.Logger.LogInfo($"CheckQuestStatusNode.EvaluateConditions() : {questToCheck.jsonSaveKey}");
+            if(questToCheck.currentStatus != Quest.QuestStatus.Completed ||
+                    Plugin.Client.IsLocationChecked((long)ApLocationId.ItemWatergun))
+                return true;
+            
+            // Force Undiscovered to get water popper location check
+            __instance.SelectNextNodeInGraph("onFail");
+            __result = true;
+            return false;
+        }
+
+        return true;
+    }
+}
+
+[HarmonyPatch(typeof(SetQuestStatusNode))]
+internal class SetQuestStatusNode_Patch
+{
+    [HarmonyPatch(nameof(SetQuestStatusNode.TriggerNode))]
+    [HarmonyPrefix]
+    public static bool TriggerNode(SetQuestStatusNode __instance)
+    {
+        bool include_items = Plugin.State.SlotData?.Options.include_items ?? true;
+        bool include_basto = Plugin.State.SlotData?.Options.include_basto ?? true;
+        if (!include_items || !include_basto)
+            return true;
+
+        var questToUpdate = __instance.questToUpdate;
+        if (questToUpdate.jsonSaveKey == "Kiosky Gate -Backend Quest")
+        {
+            Plugin.Logger.LogInfo($"SetQuestStatusNode.TriggerNode() : {questToUpdate.jsonSaveKey}");
+            if(questToUpdate.currentStatus != Quest.QuestStatus.Completed)
+                return true;
+
+            // Don't downgrade quest from Completed if we needed to force Water popper get item
+            __instance.SelectNextNodeInGraph();
+            DialogueBaseNode.TriggerCurrentNode();
+            return false;
+        }
+
+        return true;
+    }
+}
+
 [HarmonyPatch(typeof(TheEndScreen))]
 internal class TheEndScreen_Patch
 {

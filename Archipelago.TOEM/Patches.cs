@@ -225,9 +225,10 @@ internal class PlayerInventory_Patch
     {
         // Make game determine if we have a cassette based on if location checked rather than if item is present
         bool include_cassettes = Plugin.State.SlotData?.Options.include_cassettes ?? true;
+        bool include_basto = Plugin.State.SlotData?.Options.include_basto ?? true;
         if(include_cassettes && PlayMusic_Patch.CheckingCassette && itemToCheck.category == Item_SO.ItemCategory.Cassette){
             bool found = Data.CassetteToApLocationId.TryGetValue(itemToCheck.jsonSaveKey, out var apLocation);
-            if (found)
+            if (found && (include_basto || apLocation < ApLocationId.FirstBasto))
             {
                 __result = Plugin.Client.IsLocationChecked((long)apLocation);
                 return false;
@@ -293,8 +294,9 @@ internal class InventoryHasItem_Patch
     public static bool ExecuteEvent(InventoryHasItem __instance)
     {
         bool include_items = Plugin.State.SlotData?.Options.include_items ?? true;
+        bool include_basto = Plugin.State.SlotData?.Options.include_basto ?? true;
         bool found = Data.ItemToApLocationId.TryGetValue(__instance.item.jsonSaveKey, out var apLocation);
-        if (!found || !include_items)
+        if (!found || !include_items || (!include_basto && apLocation >= ApLocationId.FirstBasto))
             return true;
         if (apLocation != ApLocationId.ItemAwardMask && apLocation != ApLocationId.ItemGhostGlasses &&
                 apLocation != ApLocationId.ItemSandwich && apLocation != ApLocationId.ItemFrisbee &&
@@ -323,8 +325,10 @@ internal class InventoryHasItem_Patch
     public static bool ExecuteEvent(InventoryHasItem __instance, Item_SO addedItem)
     {
         bool include_items = Plugin.State.SlotData?.Options.include_items ?? true;
+        bool include_basto = Plugin.State.SlotData?.Options.include_basto ?? true;
         bool found = Data.ItemToApLocationId.TryGetValue(__instance.item.jsonSaveKey, out var apLocation);
-        if (!found || !include_items || __instance.hasBeenTriggered || __instance.item != addedItem)
+        if (!found || !include_items || __instance.hasBeenTriggered || __instance.item != addedItem || 
+                (!include_basto && apLocation >= ApLocationId.FirstBasto))
             return true;
         if (apLocation != ApLocationId.ItemBastoTicket)
             return true;
@@ -392,11 +396,13 @@ internal class CheckItemNode_Patch
     public static bool EvaluateConditions(CheckItemNode __instance, ref bool __result)
     {
         bool include_items = Plugin.State.SlotData?.Options.include_items ?? true;
+        bool include_basto = Plugin.State.SlotData?.Options.include_basto ?? true;
         if (include_items){
             foreach (var item in __instance.itemsToCheckFor)
             {
                 bool found = Data.ItemToApLocationId.TryGetValue(item.jsonSaveKey, out var apLocation);
-                if (found && (apLocation == ApLocationId.ItemTripod || apLocation == ApLocationId.ItemFlag ||
+                if (found && (include_basto || apLocation < ApLocationId.FirstBasto) && 
+                        (apLocation == ApLocationId.ItemTripod || apLocation == ApLocationId.ItemFlag ||
                         apLocation == ApLocationId.ItemSkiGoggles || apLocation == ApLocationId.ItemScarf ||
                         apLocation == ApLocationId.ItemBastoTicket))
                 {

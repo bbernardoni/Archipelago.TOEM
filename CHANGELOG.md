@@ -85,3 +85,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - No client change from 2.0.1 (so you don't need to update client if already on 2.0.1)
 - Bugfix: Fix key error when enforce_deferred_connections is on
 - Bugfix: Fix type error when enforce_deferred_connections is off
+
+## [2.0.3] - 2026-03-
+
+- Bugfix: Make TraversedEntrances in DataStorage updated async. Might fix the ER transistion breaking bug.

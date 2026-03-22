@@ -319,11 +319,13 @@ public class Client
 
     public void TraverseEntrance(int entrance)
     {
-        List<int> traversedEntrances = _session.DataStorage[Scope.Slot, "TraversedEntrances"];
-        if(!traversedEntrances.Contains(entrance))
-        {
-            traversedEntrances.Add(entrance);
-            _session.DataStorage[Scope.Slot, "TraversedEntrances"] = traversedEntrances;
-        }
+        _session.DataStorage[Scope.Slot, "TraversedEntrances"].GetAsync<List<int>>().ContinueWith(task => {
+            var traversedEntrances = task.Result;
+            if(!traversedEntrances.Contains(entrance))
+            {
+                traversedEntrances.Add(entrance);
+                _session.DataStorage[Scope.Slot, "TraversedEntrances"] = traversedEntrances;
+            }
+        });
     }
 }

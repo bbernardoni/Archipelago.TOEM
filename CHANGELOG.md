@@ -9,17 +9,17 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 - First testing release, supports stamps
 
-## [0.2.0] - 2024-10-06
+## [0.2.0] - 2025-10-06
 
 - First fully functional release. Supports stamps and items.
 
-## [0.3.0] - 2024-10-12
+## [0.3.0] - 2025-10-12
 
 - Added achievements and cassettes
 - Added options to change stamp requirements per region
 - Lots of bug fixes
 
-## [1.0.0] - 2024-10-24
+## [1.0.0] - 2025-10-24
 
 - Official release!
 - Overhauled UI
@@ -29,26 +29,26 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
     - Pull up new game menu on client connection
 - Play sounds when awarding items from server
 
-## [1.0.1] - 2024-10-25
+## [1.0.1] - 2025-10-25
 
 - Bug fix to allow the include_basto option to be set to false
 
-## [1.0.2] - 2024-11-22
+## [1.0.2] - 2025-11-22
 
 - Bug fix prevent the show/hide console log button from retaining focus
 - Removed skip balancing from stamp items
 
-## [1.1.0] - 2024-11-29
+## [1.1.0] - 2025-11-29
 
 - Add option to make stamps progressive. Option set by default to encourage better default balancing.
 
-## [1.1.1] - 2024-12-19
+## [1.1.1] - 2025-12-19
 
 - Bug fix where `progressive_stamp_requirements` was not instanced per world (and so all slots would share the same one)
 - Switched to building the .apworld with the "Build APWorlds" command in the launcher
 - Added cooldown on Stamp/Photo/Item get sounds
 
-## [1.9.0] - 2024-02-01
+## [1.9.0] - 2026-02-01
 
 - Entrance Randomizer beta!
     - Adds one ER mode of randomizing entrances within each region
@@ -64,7 +64,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - Bugfix: Turning in multiple fruits to the ice cream vendor awards all locations not just the last one
 - Bugfix: Punky parrot location check now functional
 
-## [2.0.0] - 2024-02-26
+## [2.0.0] - 2026-02-26
 
 - Reimplments Cassettes with new ER logic
 - Added version checks for Client and UT
@@ -74,8 +74,14 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - Bugfix: Added logic for raft being fixed with electricity
 - Bugfix: Basto ticket now properly unlocks house exit
 
-## [2.0.1] - 2024-03-01
+## [2.0.1] - 2026-03-01
 
 - Client version check now allows any patch version (aka, the 2.0.1 will work on any apworld with version 2.0.x)
 - Bugfix: Basto disabled option works again (was giving key error on gen)
 - Bugfix: Fixed bad entrance logic when progressive stamps are off
+
+## [2.0.2] - 2026-03-02
+
+- No client change from 2.0.1 (so you don't need to update client if already on 2.0.1)
+- Bugfix: Fix key error when enforce_deferred_connections is on
+- Bugfix: Fix type error when enforce_deferred_connections is off

@@ -102,6 +102,7 @@ public class Client
             Disconnect();
             return;
         }
+        _session.DataStorage[Scope.Slot, "TraversedEntrances"].Initialize(new List<int>());
         Plugin.State.SetupSession(slotData, _session.RoomState.Seed);
         Plugin.Game.ConnectSave();
         Plugin.UpdateConnectionInfo(Plugin.State.Uri, Plugin.State.SlotName, Plugin.State.Password);

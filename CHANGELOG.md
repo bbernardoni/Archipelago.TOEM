@@ -92,3 +92,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - Bugfix: Make TraversedEntrances in DataStorage updated async. Might fix the ER transition breaking bug
 - Bugfix: Have Basto item checks not use IsLocationChecked when Basto is disabled
 - Bugfix: Allow checking the water popper location if gate is already opened
+
+## [2.0.4] - 2026-04-24
+
+- Bugfix: Fix a regression in deferred entrances
+- Bugfix: Correct a logic bug with the Sandwich item's location

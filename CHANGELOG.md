@@ -97,3 +97,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 - Bugfix: Fix a regression in deferred entrances
 - Bugfix: Correct a logic bug with the Sandwich item's location
+
+## [2.0.5] - 2026-04-25
+
+- Bugfix: Prevent occasionally generating an impossible Basto ER

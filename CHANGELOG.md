@@ -101,3 +101,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## [2.0.5] - 2026-04-25
 
 - Bugfix: Prevent occasionally generating an impossible Basto ER
+
+## [2.0.6] - 2026-04-27
+
+- Bugfix: Fix bad new version usage preventing connect

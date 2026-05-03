@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using Photographing;
 using Quests;
+using System.Text.RegularExpressions;
 using UnityEngine;
 
 namespace Archipelago.TOEM;
@@ -349,6 +350,39 @@ public class Game
         }
     }
 
+    public static string GetScenePath(string sceneName)
+    {
+        string sceneDirectory = "";
+        foreach (var (prefix, directory) in Data.RegionSceneName)
+        {
+            if (sceneName.StartsWith(prefix))
+            {
+                sceneDirectory = directory;
+                break;
+            }
+        }
+        if(sceneName == "CosmoGarden")
+            sceneDirectory = "Mountain";
+        return $"Assets/Scenes/{sceneDirectory}/{sceneName}.unity";
+    }
+
+    public static void TpER(string scenePath, int transitionNodeIndex)
+    {
+        var match = Regex.Match(scenePath, @"Assets/Scenes/([A-Za-z]*)/([A-Za-z0-9_]*)\.unity");
+        //string regionName = match.Groups[1].Value;
+        string sceneShortName = match.Groups[2].Value;
+        ApConnectionId sourceEntrance = Data.SceneTransitionToEntrance[sceneShortName][transitionNodeIndex];
+        Plugin.Logger.LogInfo($"Corresponding source entrance: {sourceEntrance}");
+        ApConnectionId targetEntrance = (ApConnectionId)Plugin.State.SlotData.Transitions[(int)sourceEntrance];
+        Plugin.Logger.LogInfo($"Randomized target entrance: {targetEntrance}");
+        var scenePair = Data.EntranceToSceneTransition[targetEntrance];
+        string targetSceneName = scenePair.Item1;
+        int newTransitionNodeIndex = scenePair.Item2;
+        Plugin.Logger.LogInfo($"Randomized scene: {targetSceneName} ({newTransitionNodeIndex})");
+
+        Plugin.Game.Tp(targetSceneName, newTransitionNodeIndex);
+    }
+
     public void TpCommand(string sceneName, int transitionNodeIndex)
     {
         if (!Data.SceneTransitionToEntrance.ContainsKey(sceneName))
@@ -365,34 +399,33 @@ public class Game
         }
 
         Client.ClientConsole.LogMessage($"Teleporting to scene {sceneName} ({transitionNodeIndex})");
-        string sceneDirectory = "";
-        foreach (var (prefix, directory) in Data.RegionSceneName)
-        {
-            if (sceneName.StartsWith(prefix))
-            {
-                sceneDirectory = directory;
-                break;
-            }
-        }
-        if(sceneName == "CosmoGarden")
-            sceneDirectory = "Mountain";
-        string scenePath = $"Assets/Scenes/{sceneDirectory}/{sceneName}.unity";
-        SceneReference sceneRef = new()
-        {
-            scenePath = scenePath
-        };
+        Tp(sceneName, transitionNodeIndex);
+    }
+
+    public void Tp(string sceneName, int transitionNodeIndex)
+    {
         IsCmdTp = true;
-        SceneTransitionController.Instance.DoSceneTransition(sceneRef, transitionNodeIndex, LoadingIndicator.LoadingType.Standard);
+        string scenePath = GetScenePath(sceneName);
+        if(transitionNodeIndex < 0)
+        {
+            if(sceneName == "harborBusStop" || sceneName == "harborHydroplant")
+                TpRaft(scenePath);
+            if(sceneName == "mountainSkiCabin" || sceneName == "mountainSkiTop")
+                TpSkiLift(scenePath);
+        }
+        else
+        {
+            SceneReference sceneRef = new()
+            {
+                scenePath = scenePath
+            };
+            SceneTransitionController.Instance.DoSceneTransition(sceneRef, transitionNodeIndex, LoadingIndicator.LoadingType.Standard);
+        }
         IsCmdTp = false;
     }
 
-    public void TpRaft(string scenePath)
+    public static void TpRaft(string scenePath)
     {
-        SceneReference sceneRef = new()
-        {
-            scenePath = scenePath
-        };
-        SceneTransitionController._Instance_k__BackingField.DoSceneTransitionEvent(sceneRef, LoadingIndicator.LoadingType.Standard);
         RaftController.satAtBenchIndex = 0;
         var sitState = PlayerController.Instance.sitState;
         sitState.sitTarget = PlayerController.Instance.transform;
@@ -404,5 +437,26 @@ public class Game
             companion.companionControllerScript.SetFollowTarget(PlayerController.Instance.transform);
         }
 
+        RaftController.isArrivingFromOtherSide = true;
+        SceneReference sceneRef = new()
+        {
+            scenePath = scenePath
+        };
+        SceneTransitionController._Instance_k__BackingField.DoSceneTransitionEvent(sceneRef, LoadingIndicator.LoadingType.Standard);
+    }
+
+    public static void TpSkiLift(string scenePath)
+    {
+        var sitState = PlayerController.Instance.sitState;
+        sitState.sitTarget = PlayerController.Instance.transform;
+        PlayerController.Instance.ChangePlayerState(sitState);
+
+        SkiliftController.CurrentState = SkiliftController.State.ArrivingOnOtherSide;
+        SkiliftController_Patch.ResetState = false;
+        SceneReference sceneRef = new()
+        {
+            scenePath = scenePath
+        };
+        SceneTransitionController._Instance_k__BackingField.DoSceneTransitionEvent(sceneRef, LoadingIndicator.LoadingType.Standard);
     }
 }

@@ -603,46 +603,75 @@ internal class SceneTransitionController_Patch
 {
     [HarmonyPatch(nameof(SceneTransitionController.DoSceneTransition))]
     [HarmonyPrefix]
-    public static void DoSceneTransition(SceneReference sceneName, ref int transitionNodeIndex, ref LoadingIndicator.LoadingType loadingType)
+    public static bool DoSceneTransition(SceneReference sceneName, ref int transitionNodeIndex, ref LoadingIndicator.LoadingType loadingType)
     {
         Plugin.Logger.LogInfo($"SceneTransitionController.DoSceneTransition({sceneName.scenePath}, {transitionNodeIndex}, {loadingType})");
         int entrance_randomization = Plugin.State.SlotData?.Options.entrance_randomization ?? 0;
         if(Plugin.Game.IsCmdTp || loadingType != LoadingIndicator.LoadingType.Standard || entrance_randomization == 0)
-            return;
-        
-        var match = Regex.Match(sceneName.scenePath, @"Assets/Scenes/([A-Za-z]*)/([A-Za-z0-9_]*)\.unity");
-        string regionName = match.Groups[1].Value;
-        string sceneShortName = match.Groups[2].Value;
-        ApConnectionId sourceEntrance = Data.SceneTransitionToEntrance[sceneShortName][transitionNodeIndex];
-        Plugin.Logger.LogInfo($"Corresponding source entrance: {sourceEntrance}");
-        ApConnectionId targetEntrance = (ApConnectionId)Plugin.State.SlotData.Transitions[(int)sourceEntrance];
-        Plugin.Logger.LogInfo($"Randomized target entrance: {targetEntrance}");
-        var scenePair = Data.EntranceToSceneTransition[targetEntrance];
-        string targetSceneName = scenePair.Item1;
-        int newTransitionNodeIndex = scenePair.Item2;
-        Plugin.Logger.LogInfo($"Randomized scene: {targetSceneName} ({newTransitionNodeIndex})");
+            return true;
 
-        string sceneDirectory = "";
-        foreach (var (prefix, directory) in Data.RegionSceneName)
-        {
-            if (targetSceneName.StartsWith(prefix))
-            {
-                sceneDirectory = directory;
-                break;
-            }
-        }
-        if(targetSceneName == "CosmoGarden")
-            sceneDirectory = "Mountain";
-        sceneName.scenePath = $"Assets/Scenes/{sceneDirectory}/{targetSceneName}.unity";
-        transitionNodeIndex = newTransitionNodeIndex;
-        Plugin.Client.TraverseEntrance((int)sourceEntrance);
+        Game.TpER(sceneName.scenePath, transitionNodeIndex);
+        return false;
     }
 
     
     [HarmonyPatch(nameof(SceneTransitionController.DoSceneTransitionEvent))]
     [HarmonyPrefix]
-    public static void DoSceneTransitionEvent(SceneReference sceneName, LoadingIndicator.LoadingType loadingType)
+    public static bool DoSceneTransitionEvent(SceneReference sceneName, LoadingIndicator.LoadingType loadingType)
     {
         Plugin.Logger.LogInfo($"SceneTransitionController.DoSceneTransitionEvent({sceneName.scenePath}, {loadingType})");
+        int entrance_randomization = Plugin.State.SlotData?.Options.entrance_randomization ?? 0;
+        var match = Regex.Match(sceneName.scenePath, @"Assets/Scenes/([A-Za-z]*)/([A-Za-z0-9_]*)\.unity");
+        string sceneShortName = match.Groups[2].Value;
+        if(Plugin.Game.IsCmdTp || loadingType != LoadingIndicator.LoadingType.Standard || entrance_randomization == 0 || sceneShortName == "resortDino")
+            return true;
+
+        if(sceneShortName == "harborBusStop" || sceneShortName == "harborHydroplant")
+        {
+            RaftController.isArrivingFromOtherSide = false;
+            CameraController.Instance.ResetTarget();
+            Cutscene.SetCutsceneState(false);
+            
+            var companion = RaftController.GetLostDogCompanion();
+            if (companion.isActive)
+            {
+                companion.companionControllerScript.SetFollowTarget(null);
+                companion.companionControllerScript.FollowPlayer();
+            }
+            FMOD.Studio.EventInstance.FMOD_Studio_EventInstance_SetParameterByID(RaftController.raftCutSceneEventInstance.handle, RaftController.raftCutsceneParameterID, 1.0f, false);
+        }
+        else if(sceneShortName == "mountainSkiCabin" || sceneShortName == "mountainSkiTop")
+        {
+            SkiliftController_Patch.ResetState = true;
+            CameraController.Instance.ResetTarget();
+            Cutscene.SetCutsceneState(false);
+        }
+        Game.TpER(sceneName.scenePath, -1);
+        return false;
+    }
+
+    [HarmonyPatch(nameof(SceneTransitionController.ShouldPlacePlayerAtArrow))]
+    [HarmonyPrefix]
+    public static void ShouldPlacePlayerAtArrow()
+    {
+        Plugin.Logger.LogInfo($"SceneTransitionController.ShouldPlacePlayerAtArrow(): {SkiliftController.CurrentState}");
+    }
+}
+
+[HarmonyPatch(typeof(SkiliftController))]
+internal class SkiliftController_Patch
+{
+    static public bool ResetState = false;
+
+    [HarmonyPatch(nameof(SkiliftController.Update))]
+    [HarmonyPostfix]
+    public static void Update(SkiliftController __instance)
+    {
+        if (ResetState)
+        {
+            SkiliftController.CurrentState = SkiliftController.State.WaitingForLift;
+            __instance.enabled = false;
+            ResetState = false;
+        }
     }
 }

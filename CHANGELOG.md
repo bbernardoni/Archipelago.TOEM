@@ -105,3 +105,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## [2.0.6] - 2026-04-27
 
 - Bugfix: Fix bad new version usage preventing connect
+
+## [2.1.0] - 2026-05-
+
+- Raft and ski lift transitions are now randomized

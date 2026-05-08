@@ -336,12 +336,15 @@ public class Game
 
             PlayerController.Instance.moveSpeed = newSpeed;
         }
+        else if(command[0] == "disconnect")
+        {
+            Plugin.Client.Disconnect();
+        }
         else if(command[0] == "asdf")
         {
             int num = 0;
             if(command.Length > 1)
                 int.TryParse(command[1], out num);
-                
             
         }
         else
@@ -381,6 +384,7 @@ public class Game
         Plugin.Logger.LogInfo($"Randomized scene: {targetSceneName} ({newTransitionNodeIndex})");
 
         Plugin.Game.Tp(targetSceneName, newTransitionNodeIndex);
+        Plugin.Client.TraverseEntrance((int)sourceEntrance);
     }
 
     public void TpCommand(string sceneName, int transitionNodeIndex)

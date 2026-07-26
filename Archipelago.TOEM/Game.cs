@@ -432,8 +432,11 @@ public class Game
     {
         RaftController.satAtBenchIndex = 0;
         var sitState = PlayerController.Instance.sitState;
-        sitState.sitTarget = PlayerController.Instance.transform;
-        PlayerController.Instance.ChangePlayerState(sitState);
+        if(PlayerController.Instance.currentState != sitState)
+        {
+            sitState.sitTarget = PlayerController.Instance.transform;
+            PlayerController.Instance.ChangePlayerState(sitState);
+        }
 
         var companion = RaftController.GetLostDogCompanion();
         if (companion.isActive)

@@ -631,6 +631,7 @@ internal class SceneTransitionController_Patch
             RaftController.isArrivingFromOtherSide = false;
             CameraController.Instance.ResetTarget();
             Cutscene.SetCutsceneState(false);
+            OurInputManager.Instance.UpdateJoystickCursorState();
             
             var companion = RaftController.GetLostDogCompanion();
             if (companion.isActive)
@@ -673,5 +674,29 @@ internal class SkiliftController_Patch
             __instance.enabled = false;
             ResetState = false;
         }
+    }
+}
+
+[HarmonyPatch(typeof(RaftController))]
+internal class RaftController_Patch
+{
+    [HarmonyPatch(nameof(RaftController.Start))]
+    [HarmonyPrefix]
+    public static void Start_Prefix(RaftController __instance, out bool __state)
+    {
+        __state = false;
+        if (RaftController.isArrivingFromOtherSide && !__instance.raftKey.saveValueExist)
+        {
+            __instance.raftKey.saveValueExist = true;
+            __state = true;
+        }
+    }
+
+    [HarmonyPatch(nameof(RaftController.Start))]
+    [HarmonyPostfix]
+    public static void Start_Postfix(RaftController __instance, bool __state)
+    {
+        if (__state)
+            __instance.raftKey.saveValueExist = false;
     }
 }

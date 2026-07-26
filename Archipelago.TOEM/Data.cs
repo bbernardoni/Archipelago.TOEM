@@ -468,12 +468,6 @@ public enum ApConnectionId
 {
     // Menu
     StartGame = 1,
-    HomelandaBusStop,
-    OaklavilleBusStop,
-    StanhamnBusStop,
-    LogcityBusStop,
-    KiirubergBusStop,
-    MountainTopBusStop,
     // Homelanda
     PlayerRoomExit,
     PlayerRoomEntrance,
@@ -646,7 +640,6 @@ public enum ApConnectionId
     SkiMountainTopLeft,
     SkiLiftDown,
     // Mountain top
-    MountainTopBusPickup,
     MountainTopBusStopClimb,
     ToemDescend,
     // Basto

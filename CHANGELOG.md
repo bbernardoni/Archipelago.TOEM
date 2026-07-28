@@ -106,6 +106,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 - Bugfix: Fix bad new version usage preventing connect
 
-## [2.1.0] - 2026-05-
+## [2.1.0] - 2026-07-28
 
+- IMPORTANT: This update requires an Archipelago launcher version of 0.6.7 (for Rule Builder)
+- Switched over to Rule Builder, UT's /explain and /get_logical_path now display logic
+- Implemented "Glitched" logic for UT for annoying photos that I didn't think should be in logic and more
 - Raft and ski lift transitions are now randomized
+- Item and location group updates for regions and item aliases
+- Bugfix: The Rule Builder logic overhaul fixed some logic and ER bugs

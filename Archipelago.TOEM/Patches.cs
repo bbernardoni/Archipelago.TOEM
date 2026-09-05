@@ -3,7 +3,7 @@ using Photographing;
 using Quests;
 using Dialogue;
 using System.Text.RegularExpressions;
-using Il2CppSystem;
+using System.Collections.Generic;
 
 namespace Archipelago.TOEM;
 
@@ -339,9 +339,27 @@ internal class InventoryHasItem_Patch
             if (!__instance.executeMoreThanOnce)
             {
                 __instance.hasBeenTriggered = true;
-                // I don't think this is correct, but it also doesn't seem to cause issues
-                PlayerInventory.onItemAdded -= (Action<Item_SO>)__instance.ExecuteEvent;
-                PlayerInventory.onItemRemoved -= (Action<Item_SO>)__instance.ExecuteEvent;
+                // Super jank, but the only way that I could get working
+                List<Il2CppSystem.Delegate> list = [.. PlayerInventory.onItemAdded.delegates];
+                foreach (var action in list)
+                {
+                    if(action.Target == (Il2CppSystem.Object)__instance)
+                    {
+                        list.Remove(action);
+                        PlayerInventory.onItemAdded.delegates = list.ToArray();
+                        break;
+                    }
+                }
+                list = [.. PlayerInventory.onItemRemoved.delegates];
+                foreach (var action in list)
+                {
+                    if(action.Target == (Il2CppSystem.Object)__instance)
+                    {
+                        list.Remove(action);
+                        PlayerInventory.onItemRemoved.delegates = list.ToArray();
+                        break;
+                    }
+                }
             }
             __instance.hasItem.Invoke();
         }

@@ -5,7 +5,7 @@
     <AssemblyName>Archipelago.TOEM</AssemblyName>
     <Product>Archipelago.TOEM</Product>
     <Description>Archipelago randomizer integration for TOEM</Description>
-    <Version>2.1.0</Version>
+    <Version>2.1.1</Version>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <LangVersion>latest</LangVersion>
     <RestoreAdditionalProjectSources>
@@ -60,6 +60,9 @@
     <Reference Include="UnityEngine.TextRenderingModule">
       <HintPath>lib/UnityEngine.TextRenderingModule.dll</HintPath>
     </Reference>
+    <Reference Include="UnityEngine.ImageConversionModule.dll">
+      <HintPath>lib/UnityEngine.ImageConversionModule.dll</HintPath>
+    </Reference>
     <Reference Include="XNode">
       <HintPath>lib/XNode.dll</HintPath>
     </Reference>
@@ -75,5 +78,7 @@
     <Reference Include="FMODUnity">
       <HintPath>lib/FMODUnity.dll</HintPath>
     </Reference>
+
+    <EmbeddedResource Include="assets/aplogo.png" />
   </ItemGroup>
 </Project>

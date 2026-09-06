@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using Photographing;
 using Quests;
 using UnityEngine;
+using System.Reflection;
+using HarmonyLib;
 
 namespace Archipelago.TOEM;
 
@@ -14,12 +16,20 @@ public class Game
     //public Queue<ApItemInfo> IncomingMessages { get; private set; } = new();
     public bool IsServerItem { get; set; } = false;
     public bool SetStampRequirements { get; set; } = false;
-    public bool IsCmdTp { get; set; } = false;
+    public byte[] ApLogoData;
 
     private const float SoundCooldown = 1f;
     private static float LastStampSound = -SoundCooldown;
     private static float LastPhotoSound = -SoundCooldown;
     private static float LastItemSound = -SoundCooldown;
+    
+
+    public Game()
+    {
+        var res = Assembly.GetExecutingAssembly().GetManifestResourceStream("Archipelago.TOEM.assets.aplogo.png");
+        ApLogoData = new byte[res.Length];
+        res.Read(ApLogoData, 0, ApLogoData.Length);
+    }
 
     public void Update()
     {
@@ -273,5 +283,34 @@ public class Game
         }
         else
             Client.ClientConsole.LogMessage("Unknown command. See /help for list of supported commands.");
+    }
+
+    [HarmonyPrefix, HarmonyPatch(typeof(GetItemScreen), nameof(GetItemScreen.SetupScreen))]
+    public static bool Patch_SetupGetItemScreen(GetItemScreen __instance, Item_SO pickedUpItem)
+    {
+        bool include_basto = Plugin.State.SlotData?.Options.include_basto ?? true;
+        bool include_items = Plugin.State.SlotData?.Options.include_items ?? true;
+        bool include_cassettes = Plugin.State.SlotData?.Options.include_cassettes ?? true;
+        bool found = Data.ItemToApLocationId.TryGetValue(pickedUpItem.jsonSaveKey, out var apLocation);
+        if (found && !include_items)
+            return true;
+        if (!found)
+        {
+            found = Data.CassetteToApLocationId.TryGetValue(pickedUpItem.jsonSaveKey, out apLocation);
+            if (found && !include_cassettes)
+                return true;
+        }
+        if (!found || (!include_basto && apLocation >= ApLocationId.FirstBasto))
+            return true;
+            
+        __instance.itemNameText.text = "<w=sassy>AP Item";
+        __instance.itemDescriptionText.text = "<w=sassy>An item from the multiworld!";
+        var tex = new Texture2D(256, 256, TextureFormat.RGBA32, false);
+        ImageConversion.LoadImage(tex, Plugin.Game.ApLogoData);
+        var ApLogo = Sprite.Create(tex, new Rect(0, 0, tex.width, tex.height), Vector2.zero);
+        __instance.itemSprite.sprite = ApLogo;
+        __instance.itemCountText.enabled = false;   
+        __instance.itemCategoryImage.enabled = false;
+        return false;
     }
 }

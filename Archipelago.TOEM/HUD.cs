@@ -225,7 +225,7 @@ public class HUD : UniverseLib.UI.Panels.PanelBase
     }
     
     [HarmonyPrefix, HarmonyPatch(typeof(TitleScreenMenu), nameof(TitleScreenMenu.Update))]
-    public static bool Update(TitleScreenMenu __instance)
+    public static bool Patch_TitleScreenMenu_Update(TitleScreenMenu __instance)
     {
         if (__instance.menuState != TitleScreenMenu.MenuState.HasFadedIn || __instance.hasSaveFile)
             return true;

@@ -90,7 +90,7 @@ public class LocationManager
         return false;
     }
     
-    [HarmonyPrefix, HarmonyPatch(typeof(CommunityController), nameof(PlayerInventory.AddItem))]
+    [HarmonyPrefix, HarmonyPatch(typeof(PlayerInventory), nameof(PlayerInventory.AddItem))]
     public static bool Patch_AddItem(Item_SO itemToAdd, int count, bool addedFromSaveFile)
     {
         if (addedFromSaveFile || Plugin.Game.IsServerItem)

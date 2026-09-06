@@ -15,6 +15,7 @@ public class Game
 
     public Queue<ApItemInfo> IncomingItems { get; private set; } = new();
     //public Queue<ApItemInfo> IncomingMessages { get; private set; } = new();
+    public Dictionary<long, ApItemInfo> ScoutedLocations { get; private set; } = [];
     public bool IsServerItem { get; set; } = false;
     public bool SetStampRequirements { get; set; } = false;
     public byte[] ApLogoData;
@@ -103,6 +104,8 @@ public class Game
         }
         SetStampRequirements = true;
         Plugin.LocationManager.SyncLocations();
+        
+        ScoutedLocations = Plugin.Client.ScoutAllLocations();
     }
 
     public void GiveItem(ApItemId apItemId)
@@ -304,8 +307,9 @@ public class Game
         if (!found || (!include_basto && apLocation >= ApLocationId.FirstBasto))
             return true;
             
-        __instance.itemNameText.text = "<w=sassy>AP Item";
-        __instance.itemDescriptionText.text = "<w=sassy>An item from the multiworld!";
+        var itemInfo = Plugin.Game.ScoutedLocations[(long)apLocation];
+        __instance.itemNameText.text = $"<w=sassy>{itemInfo.Name}";
+        __instance.itemDescriptionText.text = $"<w=sassy>Found Item for {itemInfo.PlayerName} ({pickedUpItem.ToString()})";
         var tex = new Texture2D(256, 256, TextureFormat.RGBA32, false);
         ImageConversion.LoadImage(tex, Plugin.Game.ApLogoData);
         var ApLogo = Sprite.Create(tex, new Rect(0, 0, tex.width, tex.height), Vector2.zero);

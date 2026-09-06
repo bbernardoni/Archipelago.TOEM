@@ -193,7 +193,7 @@ public class Client
             return null;
         }
 
-        List<long> locations = new(_session.Locations.AllLocations);
+        List<long> locations = [.. _session.Locations.AllLocations];
         var scouts = _session.Locations.ScoutLocationsAsync(locations.ToArray()).ContinueWith(task =>
         {
             Dictionary<long, ApItemInfo> itemInfos = [];

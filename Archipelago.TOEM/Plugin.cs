@@ -14,6 +14,8 @@ public class Plugin : BasePlugin
     public static Client.Client Client { get; private set; }
     public static State State { get; set; }
     public static Game Game { get; set; }
+    public static SceneManager SceneManager { get; set; }
+    public static LocationManager LocationManager { get; set; }
 
     private static ConfigEntry<string> _configUri;
     private static ConfigEntry<string> _configSlotName;
@@ -46,9 +48,11 @@ public class Plugin : BasePlugin
         var harmony = new Harmony(MyPluginInfo.PLUGIN_GUID);
         harmony.PatchAll(Assembly.GetExecutingAssembly());
 
+        Client = new();
         State = new(_configUri.Value, _configSlotName.Value, _configPassword.Value);
         Game = new();
-        Client = new();
+        SceneManager = new();
+        LocationManager = new();
         HUD.Initialize();
 
         Logger.LogInfo($"Plugin {MyPluginInfo.PLUGIN_GUID} v{MyPluginInfo.PLUGIN_VERSION} is loaded!");

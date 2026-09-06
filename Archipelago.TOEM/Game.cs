@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using Photographing;
 using Quests;
-using System.Text.RegularExpressions;
 using UnityEngine;
 
 namespace Archipelago.TOEM;
@@ -13,8 +12,6 @@ public class Game
 
     public Queue<ApItemInfo> IncomingItems { get; private set; } = new();
     //public Queue<ApItemInfo> IncomingMessages { get; private set; } = new();
-    public List<long> OutgoingLocations { get; private set; } = new();
-    public bool PendingCompletion { get; private set; } = false;
     public bool IsServerItem { get; set; } = false;
     public bool SetStampRequirements { get; set; } = false;
     public bool IsCmdTp { get; set; } = false;
@@ -67,14 +64,6 @@ public class Game
                 GiveItem((ApItemId)item.Id);
             }
         }
-        if (Plugin.Client.Connected)
-        {
-            SyncLocations();
-            if (PendingCompletion)
-            {
-                Plugin.Client.SendCompletion();
-            }
-        }
     }
 
     public void LoadSave() { }
@@ -102,36 +91,10 @@ public class Game
                 titleScreenMenu.keepAchievementsOption.ToggleOn(); // "On" means reset achievements
         }
         SetStampRequirements = true;
-        SyncLocations();
+        Plugin.LocationManager.SyncLocations();
     }
 
-    private void SyncLocations()
-    {
-        if (OutgoingLocations.Count == 0)
-            return;
-
-        bool include_basto = Plugin.State.SlotData?.Options.include_basto ?? true;
-        bool include_items = Plugin.State.SlotData?.Options.include_items ?? true;
-        bool include_cassettes = Plugin.State.SlotData?.Options.include_cassettes ?? true;
-        Predicate<long> filter = loc =>
-            (!include_basto && loc >= (long)ApLocationId.FirstBasto) ||
-            (!include_items && Data.ItemToApLocationId.ContainsValue((ApLocationId)loc)) ||
-            (!include_cassettes && Data.CassetteToApLocationId.ContainsValue((ApLocationId)loc));
-
-        foreach (var loc in OutgoingLocations)
-        {
-            if (filter(loc) && Data.ApLocationIdToApItemId.TryGetValue((ApLocationId)loc, out var apItem))
-            {
-                GiveItem(apItem);
-            }
-        }
-        OutgoingLocations.RemoveAll(filter);
-
-        Plugin.Client.SyncLocations(OutgoingLocations);
-        OutgoingLocations.Clear();
-    }
-
-    private void GiveItem(ApItemId apItemId)
+    public void GiveItem(ApItemId apItemId)
     {
         Plugin.Logger.LogDebug($"Got item {apItemId}");
         if (apItemId <= ApItemId.LastStamp)
@@ -272,30 +235,6 @@ public class Game
         }
     }
 
-    public void CheckLocation(ApLocationId location)
-    {
-        if (Plugin.Client.Connected)
-        {
-            Plugin.Client.SendLocation((long)location);
-        }
-        else
-        {
-            OutgoingLocations.Add((long)location);
-        }
-    }
-
-    public void SendCompletion()
-    {
-        if (Plugin.Client.Connected)
-        {
-            Plugin.Client.SendCompletion();
-        }
-        else
-        {
-            PendingCompletion = true;
-        }
-    }
-
     public void UnlockRegions()
     {
         foreach (var region in GameManager.instance.regionData.regionInfo)
@@ -314,20 +253,7 @@ public class Game
             Client.ClientConsole.LogMessage("Only dev commands supported for now. If you have any ideas for local user commands post in the AP discord Toem channel.");
         }
         else if(command[0] == "tp")
-        {
-            if(command.Length != 3)
-            {
-                Client.ClientConsole.LogMessage("tp command takes two arguements '/tp <sceneName> <transitionNodeIndex>'");
-            }
-            else
-            {
-                int transitionNodeIndex;
-                if(int.TryParse(command[2], out transitionNodeIndex))
-                    TpCommand(command[1], transitionNodeIndex);
-                else
-                    Client.ClientConsole.LogMessage("tp command's second argument must be an integer");
-            }
-        }
+            Plugin.SceneManager.TpCommand(command);
         else if(command[0] == "turbo")
         {
             int newSpeed = 20;
@@ -337,9 +263,7 @@ public class Game
             PlayerController.Instance.moveSpeed = newSpeed;
         }
         else if(command[0] == "disconnect")
-        {
             Plugin.Client.Disconnect();
-        }
         else if(command[0] == "asdf")
         {
             int num = 0;
@@ -348,122 +272,6 @@ public class Game
             
         }
         else
-        {
             Client.ClientConsole.LogMessage("Unknown command. See /help for list of supported commands.");
-        }
-    }
-
-    public static string GetScenePath(string sceneName)
-    {
-        string sceneDirectory = "";
-        foreach (var (prefix, directory) in Data.RegionSceneName)
-        {
-            if (sceneName.StartsWith(prefix))
-            {
-                sceneDirectory = directory;
-                break;
-            }
-        }
-        if(sceneName == "CosmoGarden")
-            sceneDirectory = "Mountain";
-        return $"Assets/Scenes/{sceneDirectory}/{sceneName}.unity";
-    }
-
-    public static void TpER(string scenePath, int transitionNodeIndex)
-    {
-        var match = Regex.Match(scenePath, @"Assets/Scenes/([A-Za-z]*)/([A-Za-z0-9_]*)\.unity");
-        //string regionName = match.Groups[1].Value;
-        string sceneShortName = match.Groups[2].Value;
-        ApConnectionId sourceEntrance = Data.SceneTransitionToEntrance[sceneShortName][transitionNodeIndex];
-        Plugin.Logger.LogInfo($"Corresponding source entrance: {sourceEntrance}");
-        ApConnectionId targetEntrance = (ApConnectionId)Plugin.State.SlotData.Transitions[(int)sourceEntrance];
-        Plugin.Logger.LogInfo($"Randomized target entrance: {targetEntrance}");
-        var scenePair = Data.EntranceToSceneTransition[targetEntrance];
-        string targetSceneName = scenePair.Item1;
-        int newTransitionNodeIndex = scenePair.Item2;
-        Plugin.Logger.LogInfo($"Randomized scene: {targetSceneName} ({newTransitionNodeIndex})");
-
-        Plugin.Game.Tp(targetSceneName, newTransitionNodeIndex);
-        Plugin.Client.TraverseEntrance((int)sourceEntrance);
-    }
-
-    public void TpCommand(string sceneName, int transitionNodeIndex)
-    {
-        if (!Data.SceneTransitionToEntrance.ContainsKey(sceneName))
-        {
-            Client.ClientConsole.LogMessage("Unknown sceneName for tp command");
-            return;
-        }
-        var sceneEntry = Data.SceneTransitionToEntrance[sceneName];
-        if (!sceneEntry.ContainsKey(transitionNodeIndex))
-        {
-            Client.ClientConsole.LogMessage("Unknown transitionNodeIndex for tp command");
-            Client.ClientConsole.LogMessage("Valid indices: "+string.Join(",", sceneEntry.Keys));
-            return;
-        }
-
-        Client.ClientConsole.LogMessage($"Teleporting to scene {sceneName} ({transitionNodeIndex})");
-        Tp(sceneName, transitionNodeIndex);
-    }
-
-    public void Tp(string sceneName, int transitionNodeIndex)
-    {
-        IsCmdTp = true;
-        string scenePath = GetScenePath(sceneName);
-        if(transitionNodeIndex < 0)
-        {
-            if(sceneName == "harborBusStop" || sceneName == "harborHydroplant")
-                TpRaft(scenePath);
-            if(sceneName == "mountainSkiCabin" || sceneName == "mountainSkiTop")
-                TpSkiLift(scenePath);
-        }
-        else
-        {
-            SceneReference sceneRef = new()
-            {
-                scenePath = scenePath
-            };
-            SceneTransitionController.Instance.DoSceneTransition(sceneRef, transitionNodeIndex, LoadingIndicator.LoadingType.Standard);
-        }
-        IsCmdTp = false;
-    }
-
-    public static void TpRaft(string scenePath)
-    {
-        RaftController.satAtBenchIndex = 0;
-        var sitState = PlayerController.Instance.sitState;
-        if(PlayerController.Instance.currentState != sitState)
-        {
-            sitState.sitTarget = PlayerController.Instance.transform;
-            PlayerController.Instance.ChangePlayerState(sitState);
-        }
-
-        var companion = RaftController.GetLostDogCompanion();
-        if (companion.isActive)
-        {
-            companion.companionControllerScript.SetFollowTarget(PlayerController.Instance.transform);
-        }
-
-        RaftController.isArrivingFromOtherSide = true;
-        SceneReference sceneRef = new()
-        {
-            scenePath = scenePath
-        };
-        SceneTransitionController._Instance_k__BackingField.DoSceneTransitionEvent(sceneRef, LoadingIndicator.LoadingType.Standard);
-    }
-
-    public static void TpSkiLift(string scenePath)
-    {
-        var sitState = PlayerController.Instance.sitState;
-        sitState.sitTarget = PlayerController.Instance.transform;
-        PlayerController.Instance.ChangePlayerState(sitState);
-
-        SkiliftController.CurrentState = SkiliftController.State.ArrivingOnOtherSide;
-        SkiliftController_Patch.ResetState = false;
-        SceneReference sceneRef = new()
-        {
-            scenePath = scenePath
-        };
-        SceneTransitionController._Instance_k__BackingField.DoSceneTransitionEvent(sceneRef, LoadingIndicator.LoadingType.Standard);
     }
 }

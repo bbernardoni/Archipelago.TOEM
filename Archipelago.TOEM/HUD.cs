@@ -8,6 +8,7 @@ using UniverseLib.Input;
 using UniverseLib.UI;
 using UniverseLib.UI.Models;
 using UniverseLib.Utility;
+using HarmonyLib;
 
 namespace Archipelago.TOEM;
 
@@ -221,5 +222,15 @@ public class HUD : UniverseLib.UI.Panels.PanelBase
     {
         return RectContainsPoint(ConnectionInfoRect, InputManager.MousePosition) ||
             RectContainsPoint(ClientConsole.ClientConsoleRect, InputManager.MousePosition);
+    }
+    
+    [HarmonyPrefix, HarmonyPatch(typeof(TitleScreenMenu), nameof(TitleScreenMenu.Update))]
+    public static bool Update(TitleScreenMenu __instance)
+    {
+        if (__instance.menuState != TitleScreenMenu.MenuState.HasFadedIn || __instance.hasSaveFile)
+            return true;
+        if (!OurInputManager.Instance.PlayerPressedActionButtonDown())
+            return true;
+        return !MouseOverHUD();
     }
 }

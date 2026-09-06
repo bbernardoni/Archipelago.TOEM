@@ -12,6 +12,7 @@ using HarmonyLib;
 
 namespace Archipelago.TOEM;
 
+[HarmonyPatch]
 public class HUD : UniverseLib.UI.Panels.PanelBase
 {
     public const string ModDisplayInfo = $"{MyPluginInfo.PLUGIN_NAME} v{MyPluginInfo.PLUGIN_VERSION}";

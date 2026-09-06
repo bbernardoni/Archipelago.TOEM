@@ -2,7 +2,6 @@ using HarmonyLib;
 using Quests;
 using Dialogue;
 using System.Collections.Generic;
-using UnityEngine;
 
 namespace Archipelago.TOEM;
 

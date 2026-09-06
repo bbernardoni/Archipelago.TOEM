@@ -3,6 +3,7 @@ using System.Text.RegularExpressions;
 
 namespace Archipelago.TOEM;
 
+[HarmonyPatch]
 public class SceneManager
 {
     // Is transistion comming from TP command

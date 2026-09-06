@@ -6,6 +6,7 @@ using System.Collections.Generic;
 
 namespace Archipelago.TOEM;
 
+[HarmonyPatch]
 public class LocationManager
 {
     public List<long> OutgoingLocations { get; private set; } = [];

@@ -8,6 +8,7 @@ using HarmonyLib;
 
 namespace Archipelago.TOEM;
 
+[HarmonyPatch]
 public class Game
 {
     public const string Name = "TOEM: A Photo Adventure";

@@ -6,14 +6,13 @@ using UniverseLib.Input;
 using UniverseLib.UI;
 using UniverseLib.UI.Models;
 using UniverseLib.UI.Widgets;
+using UniverseLib;
 
 namespace Archipelago.TOEM.Client;
 
 // adapted from oc2-modding https://github.com/toasterparty/oc2-modding/blob/main/OC2Modding/GameLog.cs
-public class ClientConsole : UniverseLib.UI.Panels.PanelBase
+public class ClientConsole(UIBase owner) : UniverseLib.UI.Panels.PanelBase(owner)
 {
-    public ClientConsole(UIBase owner) : base(owner) { }
-
     public override string Name => "Client Console";
     public override int MinWidth => 300;
     public override int MinHeight => 48;
@@ -38,7 +37,28 @@ public class ClientConsole : UniverseLib.UI.Panels.PanelBase
     private static InputFieldRef commandInput;
     private static bool commandInputWasFocused;
     private static ButtonRef dummyButton;
-    public static RectTransform ClientConsoleRect;
+
+    public static UIBase UiBase { get; private set; }
+
+    public static void Initialize()
+    {
+        UniverseLib.Config.UniverseLibConfig config = new()
+        {
+            Force_Unlock_Mouse = true
+        };
+        Universe.Init(1f, LateInit, Log, config);
+    }
+
+    static void LateInit()
+    {
+        UiBase = UniversalUI.RegisterUI(MyPluginInfo.PLUGIN_GUID, UiUpdate);
+        ClientConsole ClientPanel = new(UiBase);
+    }
+
+    static void UiUpdate()
+    {
+        // Called once per frame when your UI is being displayed.
+    }
 
     protected override void ConstructPanelContent()
     {
@@ -50,7 +70,6 @@ public class ClientConsole : UniverseLib.UI.Panels.PanelBase
         ContentRoot.GetComponent<VerticalLayoutGroup>().spacing = 5;
         ContentRoot.GetComponent<LayoutElement>().flexibleHeight = 0;
         ContentRoot.GetComponent<RectTransform>().pivot = new(0f, 1f);
-        ClientConsoleRect = ContentRoot.GetComponent<RectTransform>();
 
         var consoleGroup = UIFactory.CreateHorizontalGroup(ContentRoot, "ConsoleGroup", false, false, true, true, 5, childAlignment: TextAnchor.UpperRight);
         consoleGroup.GetComponent<Image>().enabled = false;
@@ -61,7 +80,7 @@ public class ClientConsole : UniverseLib.UI.Panels.PanelBase
         scrollViewGroup.GetComponent<Image>().color = new(0f, 0f, 0f, 0.5f);
         scrollView = UIFactory.CreateScrollView(scrollViewGroup, "ConsoleScrollView", out GameObject scrollContent, out AutoSliderScrollbar scrollbar);
         scrollView.GetComponent<Image>().enabled = false;
-        int scrollHeight = (int)(HUD.UiBase.Canvas.pixelRect.height * 0.3);
+        int scrollHeight = (int)(UiBase.Canvas.pixelRect.height * 0.3);
         UIFactory.SetLayoutElement(scrollView, minHeight: scrollHeight, flexibleWidth: 9999);
         UIFactory.SetLayoutGroup<VerticalLayoutGroup>(scrollContent, spacing: 5, padTop: 5, padBottom: 5, padLeft: 5, padRight: 5);
         // IDK why this is necessary but I need to toggle the scroll bad to get it rendering correctly
@@ -118,15 +137,16 @@ public class ClientConsole : UniverseLib.UI.Panels.PanelBase
     public static void SendCommand()
     {
         string command = commandInput.Text;
-        if (!string.IsNullOrWhiteSpace(command) && Plugin.Client.Connected)
+        if (!string.IsNullOrWhiteSpace(command))
         {
-            if (command[0] != '/' && Plugin.Client.Connected)
+            if (command[0] == '/')
+            {
+                LogMessage(command);
+                Plugin.Game.ExecuteCommand(command[1..]);
+            }
+            else if (Plugin.Client.Connected)
             {
                 Plugin.Client.SendMessage(command);
-            }
-            else
-            {
-                Plugin.Game.ExecuteCommand(command[1..]);
             }
         }
         commandInput.Text = "";
@@ -147,6 +167,12 @@ public class ClientConsole : UniverseLib.UI.Panels.PanelBase
         LogLines.Add(message);
         LastUpdateTime = Time.time;
         UpdatedLogLines = 2;
+    }
+    
+    public static bool RectContainsPoint(RectTransform rect, Vector2 point)
+    {
+        return point.x >= rect.position.x && point.x <= (rect.position.x + rect.rect.width) &&
+               point.y <= rect.position.y && point.y >= (rect.position.y - rect.rect.height);
     }
 
     public override void Update()
@@ -199,7 +225,7 @@ public class ClientConsole : UniverseLib.UI.Panels.PanelBase
             SendCommand();
 
         if (InputManager.GetMouseButtonDown(0) && commandInput.Component.isFocused &&
-                !HUD.RectContainsPoint(commandInput.Transform, InputManager.MousePosition))
+                !RectContainsPoint(commandInput.Transform, InputManager.MousePosition))
             commandInput.Component.DeactivateInputField();
 
         if (commandInputWasFocused != commandInput.Component.isFocused)
@@ -209,7 +235,7 @@ public class ClientConsole : UniverseLib.UI.Panels.PanelBase
 
     public override void SetDefaultSizeAndPosition()
     {
-        Rect.position = new(HUD.UiBase.Canvas.pixelRect.width * 0.3f, HUD.UiBase.Canvas.pixelRect.height);
+        Rect.position = new(UiBase.Canvas.pixelRect.width * 0.3f, UiBase.Canvas.pixelRect.height);
         Rect.pivot = new Vector2(0f, 1f);
 
         Rect.anchorMin = DefaultAnchorMin;
@@ -221,5 +247,27 @@ public class ClientConsole : UniverseLib.UI.Panels.PanelBase
         EnsureValidSize();
 
         Dragger.OnEndResize();
+    }
+
+    private static void Log(object message, LogType logType)
+    {
+        string log = message?.ToString() ?? "";
+
+        switch (logType)
+        {
+            case LogType.Assert:
+            case LogType.Log:
+                Plugin.Logger.LogMessage(log);
+                break;
+
+            case LogType.Warning:
+                Plugin.Logger.LogWarning(log);
+                break;
+
+            case LogType.Error:
+            case LogType.Exception:
+                Plugin.Logger.LogError(log);
+                break;
+        }
     }
 }

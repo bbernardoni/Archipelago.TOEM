@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Linq;
 using System.Threading.Tasks;
 using Archipelago.MultiClient.Net;
 using Archipelago.MultiClient.Net.Enums;
@@ -29,6 +30,7 @@ public class Client
 
         if (string.IsNullOrWhiteSpace(Plugin.State.Uri) || string.IsNullOrWhiteSpace(Plugin.State.SlotName))
         {
+            Plugin.Logger.LogWarning("Connect aborted. Hostname or Player name is empty.");
             return;
         }
 
@@ -78,12 +80,16 @@ public class Client
         if (loginResult is LoginFailure loginFailure)
         {
             _attemptingConnection = false;
-            Plugin.Logger.LogError("AP connection failed: " + string.Join("\n", loginFailure.Errors));
+            string failureMessage = "AP connection failed: " + string.Join("\n", loginFailure.Errors);
+            Plugin.Logger.LogError(failureMessage);
+            ClientConsole.LogMessage(failureMessage);
             _session = null;
             return;
         }
 
-        Plugin.Logger.LogInfo($"Successfully connected to {Plugin.State.Uri} as {Plugin.State.SlotName}");
+        string connectMessage = $"Successfully connected to {Plugin.State.Uri} as {Plugin.State.SlotName}";
+        Plugin.Logger.LogInfo(connectMessage);
+        ClientConsole.LogMessage(connectMessage);
         OnConnect();
     }
 
@@ -98,7 +104,9 @@ public class Client
         var slotData = _session.DataStorage.GetSlotData<SlotData>();
         if(ParseMajorVersion(slotData.Version) != ParseMajorVersion(MyPluginInfo.PLUGIN_VERSION))
         {
-            Plugin.Logger.LogError($"Incompatible client version. Client version ({MyPluginInfo.PLUGIN_VERSION}) does not match the APWorld version ({slotData.Version}) used during generation. Please install client version {slotData.Version}.");
+            string invalidVersionMessage = $"Incompatible client version. Client version ({MyPluginInfo.PLUGIN_VERSION}) does not match the APWorld version ({slotData.Version}) used during generation. Please install client version {slotData.Version}.";
+            Plugin.Logger.LogError(invalidVersionMessage);
+            ClientConsole.LogMessage(invalidVersionMessage);
             Disconnect();
             return;
         }
@@ -117,6 +125,10 @@ public class Client
             return;
         }
 
+        string disconnectMessage = "Disconnecting from server.";
+        Plugin.Logger.LogInfo(disconnectMessage);
+        ClientConsole.LogMessage(disconnectMessage);
+
         _attemptingConnection = false;
         Task.Run(() => { _session.Socket.DisconnectAsync(); }).Wait();
         _session = null;
@@ -124,8 +136,13 @@ public class Client
 
     public void Session_SocketClosed(string reason)
     {
-        Plugin.Logger.LogError("Connection to Archipelago lost: " + reason);
-        Disconnect();
+        string disconnectMessage = "Connection to Archipelago lost";
+        if (reason != "")
+            disconnectMessage += ": " + reason;
+        Plugin.Logger.LogInfo(disconnectMessage);
+        ClientConsole.LogMessage(disconnectMessage);
+        _attemptingConnection = false;
+        _session = null;
     }
 
     public void Session_ErrorReceived(Exception e, string message)
@@ -257,19 +274,22 @@ public class Client
         var player = item.Player;
         var playerName = player.Alias ?? player.Name ?? $"Player #{player.Slot}";
 
-        Plugin.Game.IncomingItems.Enqueue(new()
+        if (Plugin.Game.IncomingItems.All(incoming => incoming.Index != index))
         {
-            Id = item.ItemId,
-            Name = itemName,
-            Flags = item.Flags,
-            Player = player,
-            PlayerName = playerName,
-            IsLocal = player == GetCurrentPlayer(),
-            LocationId = item.LocationId,
-            Receiving = true,
-            Index = index,
-            IsToem = true,
-        });
+            Plugin.Game.IncomingItems.Enqueue(new()
+            {
+                Id = item.ItemId,
+                Name = itemName,
+                Flags = item.Flags,
+                Player = player,
+                PlayerName = playerName,
+                IsLocal = player == GetCurrentPlayer(),
+                LocationId = item.LocationId,
+                Receiving = true,
+                Index = index,
+                IsToem = true,
+            });
+        }
     }
 
     public void Session_CheckedLocationsUpdated(ReadOnlyCollection<long> newCheckedLocations)

@@ -7,13 +7,6 @@ internal class GameManager_Patch
 {
     static public bool resetOnMenuRemoved = false;
 
-    [HarmonyPrefix, HarmonyPatch(nameof(GameManager.StartGame))]
-    public static void StartGame()
-    {
-        Plugin.Logger.LogInfo("GameManager.StartGame()");
-        Plugin.Client.Connect();
-    }
-
     [HarmonyPrefix, HarmonyPatch(nameof(GameManager.Update))]
     public static void Update()
     {

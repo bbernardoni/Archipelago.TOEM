@@ -276,6 +276,8 @@ public class Game
 
             PlayerController.Instance.moveSpeed = newSpeed;
         }
+        else if(command[0] == "connect")
+            Plugin.Client.Connect();
         else if(command[0] == "disconnect")
             Plugin.Client.Disconnect();
         else if(command[0] == "asdf")

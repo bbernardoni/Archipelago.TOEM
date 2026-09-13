@@ -1,4 +1,5 @@
 ﻿using System.Reflection;
+using Archipelago.TOEM.Client;
 using BepInEx;
 using BepInEx.Configuration;
 using BepInEx.Logging;
@@ -53,7 +54,7 @@ public class Plugin : BasePlugin
         Game = new();
         SceneManager = new();
         LocationManager = new();
-        HUD.Initialize();
+        ClientConsole.Initialize();
 
         Logger.LogInfo($"Plugin {MyPluginInfo.PLUGIN_GUID} v{MyPluginInfo.PLUGIN_VERSION} is loaded!");
     }

@@ -276,6 +276,19 @@ public class Game
 
             PlayerController.Instance.moveSpeed = newSpeed;
         }
+        else if(command[0] == "intro")
+        {
+            List<string> introKeys = ["Got Bag", "Grandma Bye", "Got Camera", "Grandma Intro", "Kiosky Intro"];
+            foreach (var key in GameManager.QuestDatabase.saveKeys)
+            {
+                if (introKeys.Contains(key.jsonSaveKey))
+                    key.SetTrue();
+            }
+            GiveGameItem("Bag");
+            GiveGameItem("Camera");
+            GiveGameItem("Album");
+            GiveGameItem("CommunityCard");
+        }
         else if(command[0] == "connect")
             Plugin.Client.Connect();
         else if(command[0] == "disconnect")

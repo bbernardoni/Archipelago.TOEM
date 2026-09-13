@@ -17,6 +17,7 @@ public class Plugin : BasePlugin
     public static Game Game { get; set; }
     public static SceneManager SceneManager { get; set; }
     public static LocationManager LocationManager { get; set; }
+    public static SaveFileManager SaveFileManager { get; set; }
 
     private static ConfigEntry<string> _configUri;
     private static ConfigEntry<string> _configSlotName;

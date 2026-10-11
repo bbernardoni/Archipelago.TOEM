@@ -102,7 +102,7 @@ public class UIConnection
         __instance.SetupTitleScreen(true, false);
         __instance.displayPlaytime.gameObject.active = false;
         // Hide New adventure button
-        //__instance.mainGrid.gameObject.transform.GetChild(2).gameObject.active = false;
+        __instance.mainGrid.gameObject.transform.GetChild(2).gameObject.active = false;
         
         __instance.versionText.text = $"{__instance.versionLocalizedString.ToString()} {Application.version} (Toem), {MyPluginInfo.PLUGIN_VERSION} (AP)";
 
@@ -420,16 +420,4 @@ public class UIConnection
         if (Inputs.Count > 2 && __instance == Inputs[1].text)
             SuperTextMesh.font = __instance.data.defaultFont;
     }
-
-    [HarmonyPrefix, HarmonyPatch(typeof(TitleScreenMenu), nameof(TitleScreenMenu.StartGame))]
-    public static bool StartGame()
-    {
-        Plugin.Logger.LogInfo("TitleScreenMenu.StartGame()");
-        if (!Plugin.Client.Connected)
-        {
-            Plugin.Client.Connect();
-        }
-        return Plugin.Client.Connected;
-    }
-    
 }

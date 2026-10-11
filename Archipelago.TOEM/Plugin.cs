@@ -55,6 +55,7 @@ public class Plugin : BasePlugin
         Game = new();
         SceneManager = new();
         LocationManager = new();
+        SaveFileManager = new();
         ClientConsole.Initialize();
 
         Logger.LogInfo($"Plugin {MyPluginInfo.PLUGIN_GUID} v{MyPluginInfo.PLUGIN_VERSION} is loaded!");

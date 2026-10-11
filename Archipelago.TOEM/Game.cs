@@ -17,7 +17,6 @@ public class Game
     //public Queue<ApItemInfo> IncomingMessages { get; private set; } = new();
     public Dictionary<long, ApItemInfo> ScoutedLocations { get; private set; } = [];
     public bool IsServerItem { get; set; } = false;
-    public bool SetStampRequirements { get; set; } = false;
     public byte[] ApLogoData;
 
     private const float SoundCooldown = 1f;
@@ -35,34 +34,6 @@ public class Game
 
     public void Update()
     {
-        if (SetStampRequirements)
-        {
-            foreach (var region in GameManager.instance.regionData.regionInfo)
-            {
-                switch (region.region)
-                {
-                    case Quest.QuestRegion.Home:
-                        region.requiredStamps = Plugin.State.SlotData.Options.homelanda_stamp_requirement;
-                        break;
-                    case Quest.QuestRegion.Forest:
-                        region.requiredStamps = Plugin.State.SlotData.Options.oaklaville_stamp_requirement;
-                        break;
-                    case Quest.QuestRegion.Harbor:
-                        region.requiredStamps = Plugin.State.SlotData.Options.stanhamn_stamp_requirement;
-                        break;
-                    case Quest.QuestRegion.City:
-                        region.requiredStamps = Plugin.State.SlotData.Options.logcity_stamp_requirement;
-                        break;
-                    case Quest.QuestRegion.Mountain:
-                        region.requiredStamps = Plugin.State.SlotData.Options.kiiruberg_stamp_requirement;
-                        break;
-                    case Quest.QuestRegion.Resort:
-                        region.requiredStamps = Plugin.State.SlotData.Options.basto_stamp_requirement;
-                        break;
-                }
-            }
-            SetStampRequirements = false;
-        }
         if (IncomingItems.TryDequeue(out var item))
         {
             if (item.Index < Plugin.State.ItemIndex /*&& !HasItem((ApItemId)item.Id)*/)
@@ -78,33 +49,11 @@ public class Game
         }
     }
 
-    public void LoadSave() { }
-
-    public void SetupNewSave()
-    {
-        Plugin.State.ClearSave();
-        UnlockRegions();
-        if(Plugin.Client.Connected)
-        {
-            SetStampRequirements = true;
-            Plugin.Client.ResendItems();
-        }
-    }
-
     public void ConnectSave()
     {
-        // casting doesn't work for some reason, so the workaround is a bit hacky
-        TitleScreenMenu titleScreenMenu = MenuManager.Instance.menu_TitleScreen.gameObject.GetComponent<TitleScreenMenu>();
-        if (titleScreenMenu.gameObject.active && Plugin.Client.GetNumLocationChecked()==0 && SaveManager.SaveExists())
-        {
-            //Bring up reset save menu
-            titleScreenMenu.SetNewGamePromptState(true);
-            if (Plugin.State.SlotData.Options.include_achievements)
-                titleScreenMenu.keepAchievementsOption.ToggleOn(); // "On" means reset achievements
-        }
-        SetStampRequirements = true;
         Plugin.LocationManager.SyncLocations();
         
+        // TODO cache location scouts
         ScoutedLocations = Plugin.Client.ScoutAllLocations();
     }
 
@@ -246,15 +195,6 @@ public class Game
         {
             GetItemScreen.instance.getItemJingleSound.PlaySound();
             LastItemSound = Time.time;
-        }
-    }
-
-    public void UnlockRegions()
-    {
-        foreach (var region in GameManager.instance.regionData.regionInfo)
-        {
-            Plugin.Logger.LogInfo($"Setting {region.Name} unlocked");
-            region.isUnlocked = true;
         }
     }
 

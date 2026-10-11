@@ -17,11 +17,12 @@ public class Client
 
     public bool Connected => _session?.Socket.Connected ?? false;
     private bool _attemptingConnection;
+    private bool _shouldStartGame = false;
 
     private ArchipelagoSession _session;
     private bool _ignoreLocations;
 
-    public void Connect()
+    public void Connect(bool shouldStartGame = false)
     {
         if (Connected || _attemptingConnection)
         {
@@ -44,6 +45,7 @@ public class Client
             Plugin.Logger.LogError(e);
         }
 
+        _shouldStartGame = shouldStartGame;
         TryConnect();
     }
 
@@ -112,7 +114,7 @@ public class Client
         }
         _session.DataStorage[Scope.Slot, "TraversedEntrances"].Initialize(new List<int>());
         Plugin.State.SetupSession(slotData, _session.RoomState.Seed);
-        Plugin.Game.ConnectSave();
+        Plugin.SaveFileManager.ConnectSave(_shouldStartGame);
         Plugin.UpdateConnectionInfo(Plugin.State.Uri, Plugin.State.SlotName, Plugin.State.Password);
         _ignoreLocations = false;
         _attemptingConnection = false;
@@ -331,6 +333,16 @@ public class Client
         }
 
         return _session.ConnectionInfo.Slot;
+    }
+
+    public string GetSeedName()
+    {
+        if (!Connected)
+        {
+            return "";
+        }
+
+        return _session.RoomState.Seed;
     }
 
     public void SendMessage(string message)

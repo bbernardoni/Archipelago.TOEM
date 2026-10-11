@@ -81,6 +81,12 @@
     <Reference Include="UnityEngine.InputLegacyModule">
       <HintPath>lib/UnityEngine.InputLegacyModule.dll</HintPath>
     </Reference>
+    <Reference Include="LaundryBear.Platform">
+      <HintPath>lib/LaundryBear.Platform.dll</HintPath>
+    </Reference>
+    <Reference Include="I2Localization">
+      <HintPath>lib/I2Localization.dll</HintPath>
+    </Reference>
 
     <EmbeddedResource Include="assets/aplogo.png" />
   </ItemGroup>

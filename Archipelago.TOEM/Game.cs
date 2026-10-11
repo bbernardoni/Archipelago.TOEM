@@ -224,6 +224,11 @@ public class Game
                 if (introKeys.Contains(key.jsonSaveKey))
                     key.SetTrue();
             }
+            foreach (var quest in GameManager.QuestDatabase.homeRegionQuests)
+            {
+                if (quest.jsonSaveKey == "Kiosky - Home" && quest.currentStatus == Quest.QuestStatus.Undiscovered)
+                    quest.SetStatus(Quest.QuestStatus.Ongoing);
+            }
             GiveGameItem("Bag");
             GiveGameItem("Camera");
             GiveGameItem("Album");

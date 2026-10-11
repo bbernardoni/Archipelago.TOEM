@@ -20,9 +20,12 @@ public class ApItemInfo
 public class SlotOptions
 {
     public bool include_basto { get; set; }
+    public int entrance_randomization { get; set; }
     public bool include_items { get; set; }
     public bool include_cassettes { get; set; }
     public bool include_achievements { get; set; }
+    public bool honk_attachment_early { get; set; }
+    public bool force_basto_gate_open { get; set; }
     public bool progressive_stamps { get; set; }
     public int homelanda_stamp_requirement { get; set; }
     public int oaklaville_stamp_requirement { get; set; }
@@ -30,8 +33,6 @@ public class SlotOptions
     public int logcity_stamp_requirement { get; set; }
     public int kiiruberg_stamp_requirement { get; set; }
     public int basto_stamp_requirement { get; set; }
-    public bool honk_attachment_early { get; set; }
-    public int entrance_randomization { get; set; }
 }
 
 public class SlotData

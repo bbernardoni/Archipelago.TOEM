@@ -352,3 +352,16 @@ internal class Achievement_CompleteQuestRegion_Patch
         return false;
     }
 }
+
+[HarmonyPatch(typeof(TargetPracticeController))]
+internal class TargetPracticeController_Patch
+{
+    // Force gate open
+    [HarmonyPrefix, HarmonyPatch(nameof(TargetPracticeController.Start))]
+    public static void Start(TargetPracticeController __instance)
+    {
+        bool force_gate = Plugin.State.SlotData?.Options.force_basto_gate_open ?? false;
+        if (force_gate && __instance.saveKey == "Target Practice - resortBusstop_0")
+            __instance.SaveTargetPractice();
+    }
+}

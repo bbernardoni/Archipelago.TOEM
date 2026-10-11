@@ -114,3 +114,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - Raft and ski lift transitions are now randomized
 - Item and location group updates for regions and item aliases
 - Bugfix: The Rule Builder logic overhaul fixed some logic and ER bugs
+
+## [2.2.0] - 2026-
+
+- Save system overhaul
+- AP item get
+- Bugfix: Sandwich location missing honk requirement
+- Bugfix: Broken dreams bad OOL rule

@@ -204,7 +204,12 @@ public class Game
         if(command[0] == "help")
         {
             Client.ClientConsole.LogMessage("Use '!help' for server commands.");
-            Client.ClientConsole.LogMessage("Only dev commands supported for now. If you have any ideas for local user commands post in the AP discord Toem channel.");
+            Client.ClientConsole.LogMessage("/version");
+            Client.ClientConsole.LogMessage("    Print out the mod version");
+            Client.ClientConsole.LogMessage("/connect");
+            Client.ClientConsole.LogMessage("    Connect to slot with previously entered credentials");
+            Client.ClientConsole.LogMessage("/disconnect");
+            Client.ClientConsole.LogMessage("    Disconnect from current slot");
         }
         else if(command[0] == "tp")
             Plugin.SceneManager.TpCommand(command);
@@ -238,6 +243,8 @@ public class Game
             Plugin.Client.Connect();
         else if(command[0] == "disconnect")
             Plugin.Client.Disconnect();
+        else if(command[0] == "version")
+            Client.ClientConsole.LogMessage($"Toem AP mod version {MyPluginInfo.PLUGIN_VERSION}");
         else if(command[0] == "asdf")
         {
             int num = 0;

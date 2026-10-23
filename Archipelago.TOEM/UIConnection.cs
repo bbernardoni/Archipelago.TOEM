@@ -370,6 +370,15 @@ public class UIConnection
             {
                 CaretIndex++;
             }
+
+            bool ctrlHeld = Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl);
+            if (ctrlHeld && Input.GetKeyDown(KeyCode.V))
+            {
+                string clipboard = GUIUtility.systemCopyBuffer;
+                inputText = inputText.Insert(CaretIndex+1, clipboard);
+                CaretIndex += clipboard.Length;
+                inspectMenu.onLetterAddedSound.PlaySound();
+            }
             
             if (SelectedInput == 2)
             {

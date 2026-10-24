@@ -407,6 +407,11 @@ public class UIConnection
         {
             ConnectText.text = "Connect";
             continueButton.text = "Connect & Start";
+            if (SaveFileManager.GetRootFolder() != "Save")
+            {
+                Plugin.Logger.LogInfo("Reset SetRootFolder");
+                SaveFileManager.SetRootFolder("Save");
+            }
         }
     }
     

@@ -118,6 +118,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## [2.2.0] - 2026-
 
 - Save system overhaul
+    - Vanilla save untouched
+    - Save per seed
+    - Options menu to view / delete saves
+- New connect UI
 - AP item get
+- Basto gate option
 - Bugfix: Sandwich location missing honk requirement
 - Bugfix: Broken dreams bad OOL rule

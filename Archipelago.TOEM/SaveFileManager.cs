@@ -86,7 +86,7 @@ public class SaveFileManager
         }
         else
         {
-            Plugin.Logger.LogInfo("SaveFileManager loading exiting save");
+            Plugin.Logger.LogInfo("SaveFileManager loading existing save");
             SaveManager.LoadGame(null);
         }
     }

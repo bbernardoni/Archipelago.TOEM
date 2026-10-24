@@ -70,7 +70,7 @@ public class UIOptions
             // Options
             apCategoryGameObjects = [];
             
-            __instance.AddOptionsDivider(NewLocString("AP/Options", "AP options"), (OptionsMenu.OptionsCategory)2);
+            __instance.AddOptionsDivider(NewLocString("AP/Options/Save", "Save options"), (OptionsMenu.OptionsCategory)2);
             AddOptionsCommand(__instance, "Open Save Directory", "UI/button_select", 
                 (Il2CppSystem.Action<bool>)OpenSaveDir);
             AddOptionsCommand(__instance, "Delete AP Saves", "UI/button_delete", 
@@ -196,14 +196,23 @@ public class UIOptions
     public static void PromptDeleteAPSaves(bool state)
     {
         MenuManager.ManualInitialization(MenuManager.Instance.menu_ConfirmationPrompt);
-        MenuManager.Instance.DisplayConfirmationPrompt("Delete AP Saves", "This will delete all AP saves.",
+        MenuManager.Instance.DisplayConfirmationPrompt("Delete AP Saves", "This will delete all AP saves\nbesides the current save.",
             (Il2CppSystem.Action)DeleteAPSaves);
     }
 
     public static void DeleteAPSaves()
     {
+        string currentSave = SaveFileManager.GetRootFolder();
         if(Directory.Exists(Application.persistentDataPath))
+        {
             foreach (var folder in Directory.EnumerateDirectories(Application.persistentDataPath, "AP_*"))
-                Directory.Delete(folder, true);
+            {
+                if (!folder.EndsWith(currentSave))
+                {
+                    Plugin.Logger.LogInfo($"Deleting {folder}");
+                    Directory.Delete(folder, true);
+                }
+            }
+        }
     }
 }

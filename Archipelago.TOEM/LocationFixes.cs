@@ -35,25 +35,6 @@ internal class PlayerInventory_Patch
     }
 }
 
-[HarmonyPatch(typeof(GetItemScreen))]
-internal class GetItemScreen_Patch
-{
-    [HarmonyPostfix, HarmonyPatch(nameof(GetItemScreen.CheckCloseMenu))]
-    public static void CheckCloseMenu()
-    {
-        bool include_items = Plugin.State.SlotData?.Options.include_items ?? true;
-        if (!include_items)
-            return;
-
-        var equipmentPrompt = GetItemScreen.instance.equipmentPrompt;
-        if (equipmentPrompt.active)
-        {
-            MenuManager.Instance.CloseMenu();
-            equipmentPrompt.SetActive(false);
-        }
-    }
-}
-
 [HarmonyPatch(typeof(ChestController))]
 internal class ChestController_Patch
 {

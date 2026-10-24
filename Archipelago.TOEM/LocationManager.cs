@@ -53,23 +53,6 @@ public class LocationManager
         if (OutgoingLocations.Count == 0)
             return;
 
-        bool include_basto = Plugin.State.SlotData?.Options.include_basto ?? true;
-        bool include_items = Plugin.State.SlotData?.Options.include_items ?? true;
-        bool include_cassettes = Plugin.State.SlotData?.Options.include_cassettes ?? true;
-        Predicate<long> filter = loc =>
-            (!include_basto && loc >= (long)ApLocationId.FirstBasto) ||
-            (!include_items && Data.ItemToApLocationId.ContainsValue((ApLocationId)loc)) ||
-            (!include_cassettes && Data.CassetteToApLocationId.ContainsValue((ApLocationId)loc));
-
-        foreach (var loc in OutgoingLocations)
-        {
-            if (filter(loc) && Data.ApLocationIdToApItemId.TryGetValue((ApLocationId)loc, out var apItem))
-            {
-                Plugin.Game.GiveItem(apItem);
-            }
-        }
-        OutgoingLocations.RemoveAll(filter);
-
         Plugin.Client.SyncLocations(OutgoingLocations);
         OutgoingLocations.Clear();
     }

@@ -83,32 +83,24 @@ public class State
 
     public bool GetLocationIDIfRandomized(string name, out ApLocationId apLocationId)
     {
-        bool found = Data.QuestToApLocationId.TryGetValue(name, out apLocationId);
-        if (!found)
-            found = Data.CreatureToApLocationId.TryGetValue(name, out apLocationId);
-        if (!found)
-        {
-            bool include_items = SlotData?.Options.include_items ?? true;
-            found = Data.ItemToApLocationId.TryGetValue(name, out apLocationId);
-            if (found && !include_items)
-                return false;
-        }
-        if (!found)
-        {
-            bool include_cassettes = SlotData?.Options.include_cassettes ?? true;
-            found = Data.CassetteToApLocationId.TryGetValue(name, out apLocationId);
-            if (found && !include_cassettes)
-                return false;
-        }
-        if (!found)
-        {
-            bool include_achievements = Plugin.State.SlotData?.Options.include_achievements ?? true;
-            found = Data.CheevoToApLocationId.TryGetValue(name, out apLocationId);
-            if (found && !include_achievements)
-                return false;
-        }
-        bool include_basto = SlotData?.Options.include_basto ?? true;
-        return found && (include_basto || apLocationId < ApLocationId.FirstBasto);
+        if(!Data.LocationToApLocationId.TryGetValue(name, out apLocationId))
+            return false;
+        return GetIfRandomized(apLocationId);
+    }
+
+    public bool GetIfRandomized(ApLocationId apLocationId)
+    {
+        if (!(SlotData?.Options.include_basto ?? true) && apLocationId >= ApLocationId.FirstBasto)
+            return false;
+
+        ApLocationGroup locationGroup = Data.GetLocationGroup(apLocationId);
+        if (locationGroup == ApLocationGroup.Item)
+            return SlotData?.Options.include_items ?? true;
+        if (locationGroup == ApLocationGroup.Cassette)
+            return SlotData?.Options.include_cassettes ?? true;
+        if (locationGroup == ApLocationGroup.Achievement)
+            return SlotData?.Options.include_achievements ?? true;
+        return true;
     }
 
     public void ClearConnection()

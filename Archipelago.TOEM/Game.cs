@@ -60,15 +60,16 @@ public class Game
     public void GiveItem(ApItemId apItemId)
     {
         Plugin.Logger.LogDebug($"Got item {apItemId}");
-        if (apItemId <= ApItemId.LastStamp)
+        ApItemGroup itemGroup = Data.GetItemGroup(apItemId);
+        if (itemGroup == ApItemGroup.Stamp)
         {
             GiveStamp(Data.ApItemIdToQuestRegion[apItemId]);
         }
-        else if (apItemId <= ApItemId.LastPhoto)
+        else if (itemGroup == ApItemGroup.Photo)
         {
             GivePhoto();
         }
-        else if (apItemId <= ApItemId.LastCassette)
+        else if (itemGroup == ApItemGroup.Item || itemGroup == ApItemGroup.Cassette)
         {
             GiveGameItem(Data.ApItemIdToItem[apItemId]);
         }
@@ -77,6 +78,7 @@ public class Game
     private bool HasItem(ApItemId apItemId)
     {
         // TODO
+        /*
         if (apItemId <= ApItemId.LastStamp)
         {
             //GiveStamp(Data.ApItemIdToQuestRegion[apItemId]);
@@ -90,6 +92,7 @@ public class Game
             //return GameManager.PlayerInventory.ContainsItem(Data.ApItemIdToItem[apItemId]);
             //GiveGameItem(Data.ApItemIdToItem[apItemId]);
         }
+        */
         return true;
     }
 

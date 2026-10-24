@@ -275,14 +275,64 @@ public class Game
             return true;
             
         var itemInfo = Plugin.Game.ScoutedLocations[(long)apLocation];
-        __instance.itemNameText.text = $"<w=sassy>{itemInfo.Name}";
-        __instance.itemDescriptionText.text = $"<w=sassy>Found Item for {itemInfo.PlayerName} ({pickedUpItem.ToString()})";
-        var tex = new Texture2D(256, 256, TextureFormat.RGBA32, false);
-        ImageConversion.LoadImage(tex, Plugin.Game.ApLogoData);
-        var ApLogo = Sprite.Create(tex, new Rect(0, 0, tex.width, tex.height), Vector2.zero);
-        __instance.itemSprite.sprite = ApLogo;
-        __instance.itemCountText.enabled = false;   
-        __instance.itemCategoryImage.enabled = false;
+        string color = "00EEEE";
+        if ((itemInfo.Flags & MultiClient.Net.Enums.ItemFlags.Trap) != 0)
+            color = "FA8072";
+        else if ((itemInfo.Flags & MultiClient.Net.Enums.ItemFlags.Advancement) != 0)
+        {
+            if ((itemInfo.Flags & MultiClient.Net.Enums.ItemFlags.NeverExclude) != 0)
+                color = "rainbow";
+            else
+                color = "AF99EF";
+        }
+        else if ((itemInfo.Flags & MultiClient.Net.Enums.ItemFlags.NeverExclude) != 0)
+            color = "6D8BE8";
+
+        __instance.itemNameText.text = $"<w=sassy><c={color}>{itemInfo.Name}";
+        string foundFor = itemInfo.IsLocal? "Your Item": $"Item for {itemInfo.PlayerName}";
+        __instance.itemDescriptionText.text = $"<w=sassy>Found {foundFor} at {pickedUpItem.ToString()}";
+        __instance.itemCountText.enabled = false;
+        
+        if (itemInfo.IsToem && Data.ApItemIdToItem.TryGetValue((ApItemId)itemInfo.Id, out var jsonSaveKey))
+        {
+            var itemObj = GameManager.ItemDatabase.GetItemByName(jsonSaveKey);
+            __instance.itemSprite.sprite = itemObj.sprite;
+            var equipableItemObj = itemObj.TryCast<EquipableItem>();
+            if (equipableItemObj)
+            {
+                if (itemInfo.IsLocal)
+                    __instance.equipableItemThatWasGivenToPlayer = equipableItemObj;
+                foreach (var category in __instance.equipmentCategories)
+                {
+                    if (category.category == equipableItemObj.equipmentCategory)
+                    {
+                        __instance.itemCategoryImage.sprite = category.categorySprite;
+                        break;
+                    }
+                }
+            }
+            else
+            {
+                foreach (var category in __instance.itemCategories)
+                {
+                    if (category.category == itemObj.category)
+                    {
+                        __instance.itemCategoryImage.sprite = category.categorySprite;
+                        break;
+                    }
+                }
+            }
+        }
+        else
+        {
+            var tex = new Texture2D(256, 256, TextureFormat.RGBA32, false);
+            ImageConversion.LoadImage(tex, Plugin.Game.ApLogoData);
+            var ApLogo = Sprite.Create(tex, new Rect(0, 0, tex.width, tex.height), Vector2.zero);
+            __instance.itemSprite.sprite = ApLogo;
+            __instance.itemCategoryImage.sprite = null;
+        }
+        __instance.itemCategoryImage.enabled = __instance.itemCategoryImage.sprite != null;
+
         return false;
     }
 }

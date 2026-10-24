@@ -38,6 +38,7 @@ public class SlotOptions
 public class SlotData
 {
     public string Version { get; set; }
+    public string Minimum_version { get; set; }
     public SlotOptions Options { get; set; }
     public Dictionary<int, int> Transitions { get; set; }
 }

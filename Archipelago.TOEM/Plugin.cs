@@ -11,6 +11,8 @@ namespace Archipelago.TOEM;
 [BepInPlugin(MyPluginInfo.PLUGIN_GUID, MyPluginInfo.PLUGIN_NAME, MyPluginInfo.PLUGIN_VERSION)]
 public class Plugin : BasePlugin
 {
+    public const string MinimumVersion = "2.2.0";
+
     public static ManualLogSource Logger { get; private set; }
     public static Client.Client Client { get; private set; }
     public static State State { get; set; }

@@ -95,23 +95,35 @@ public class Client
         OnConnect();
     }
 
-    private static string ParseMajorVersion(string version)
+    private static bool VersionLessThan(string versionString1, string versionString2)
     {
-        int last_dot = version.LastIndexOf(".");
-        return version[..last_dot];
+        if (Version.TryParse(versionString1, out Version version1) && 
+            Version.TryParse(versionString2, out Version version2))
+        {
+            return version1 < version2;
+        }
+        return true;
     }
 
     private void OnConnect()
     {
         var slotData = _session.DataStorage.GetSlotData<SlotData>();
-        if(ParseMajorVersion(slotData.Version) != ParseMajorVersion(MyPluginInfo.PLUGIN_VERSION))
+        slotData.Version ??= "0.0.0";
+        slotData.Minimum_version ??= slotData.Version[..slotData.Version.LastIndexOf(".")] + ".0";
+
+        string invalidVersionMessage = "";
+        if (VersionLessThan(slotData.Version, Plugin.MinimumVersion))
+            invalidVersionMessage = $"Incompatible client version. The APWorld version ({slotData.Version}) used during generation is older than the minimum supported client version ({Plugin.MinimumVersion}). Please install client version {slotData.Version}.";
+        if (VersionLessThan(MyPluginInfo.PLUGIN_VERSION, slotData.Minimum_version))
+            invalidVersionMessage = $"Incompatible client version. Client version ({MyPluginInfo.PLUGIN_VERSION}) is older than the minimum supported version ({slotData.Minimum_version}) of the APWorld used during generation. Please install client version {slotData.Version}.";
+        if(invalidVersionMessage != "")
         {
-            string invalidVersionMessage = $"Incompatible client version. Client version ({MyPluginInfo.PLUGIN_VERSION}) does not match the APWorld version ({slotData.Version}) used during generation. Please install client version {slotData.Version}.";
             Plugin.Logger.LogError(invalidVersionMessage);
             ClientConsole.LogMessage(invalidVersionMessage);
             Disconnect();
             return;
         }
+
         _session.DataStorage[Scope.Slot, "TraversedEntrances"].Initialize(new List<int>());
         Plugin.State.SetupSession(slotData, _session.RoomState.Seed);
         Plugin.SaveFileManager.ConnectSave(_shouldStartGame);

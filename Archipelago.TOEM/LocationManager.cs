@@ -78,9 +78,7 @@ public class LocationManager
     public static bool Patch_GetStamp(Quest completedQuest)
     {
         Plugin.Logger.LogInfo($"CommunityController.GetStamp({completedQuest})");
-        bool include_basto = Plugin.State.SlotData?.Options.include_basto ?? true;
-        bool found = Data.QuestToApLocationId.TryGetValue(completedQuest.jsonSaveKey, out var apLocation);
-        if (!found || (!include_basto && apLocation >= ApLocationId.FirstBasto))
+        if (!Plugin.State.GetLocationIDIfRandomized(completedQuest.jsonSaveKey, out var apLocation))
             return true;
 
         Plugin.LocationManager.CheckLocation(apLocation);
@@ -97,19 +95,7 @@ public class LocationManager
             return true;
 
         Plugin.Logger.LogInfo($"PlayerInventory.AddItem({itemToAdd.jsonSaveKey}, {count}, {addedFromSaveFile})");
-        bool include_basto = Plugin.State.SlotData?.Options.include_basto ?? true;
-        bool include_items = Plugin.State.SlotData?.Options.include_items ?? true;
-        bool include_cassettes = Plugin.State.SlotData?.Options.include_cassettes ?? true;
-        bool found = Data.ItemToApLocationId.TryGetValue(itemToAdd.jsonSaveKey, out var apLocation);
-        if (found && !include_items)
-            return true;
-        if (!found)
-        {
-            found = Data.CassetteToApLocationId.TryGetValue(itemToAdd.jsonSaveKey, out apLocation);
-            if (found && !include_cassettes)
-                return true;
-        }
-        if (!found || (!include_basto && apLocation >= ApLocationId.FirstBasto))
+        if (!Plugin.State.GetLocationIDIfRandomized(itemToAdd.jsonSaveKey, out var apLocation))
             return true;
         if (apLocation == ApLocationId.ItemEmptyBottle && Plugin.Client.IsLocationChecked((long)apLocation))
             return true;
@@ -149,10 +135,7 @@ public class LocationManager
     public static void Patch_CompleteAchievement(Achievements.BaseAchievement __instance, bool previouslyCompleted)
     {
         Plugin.Logger.LogInfo($"Achievements.BaseAchievement.CompleteAchievement({previouslyCompleted}): {__instance.name}");
-        bool include_achievements = Plugin.State.SlotData?.Options.include_achievements ?? true;
-        bool include_basto = Plugin.State.SlotData?.Options.include_basto ?? true;
-        bool found = Data.CheevoToApLocationId.TryGetValue(__instance.name, out var apLocation);
-        if (previouslyCompleted || !found || !include_achievements || (!include_basto && apLocation >= ApLocationId.FirstBasto))
+        if (!Plugin.State.GetLocationIDIfRandomized(__instance.name, out var apLocation))
             return;
 
         Plugin.LocationManager.CheckLocation(apLocation);
@@ -162,9 +145,7 @@ public class LocationManager
     public static void Patch_AddToCompendium(CompendiumPhotoTag tagToSave)
     {
         Plugin.Logger.LogInfo($"PhotoCompendium.AddToCompendium({tagToSave.creatureName})");
-        bool include_basto = Plugin.State.SlotData?.Options.include_basto ?? true;
-        bool found = Data.CreatureToApLocationId.TryGetValue(tagToSave.creatureName, out var apLocation);
-        if (!found || (!include_basto && apLocation >= ApLocationId.FirstBasto))
+        if (!Plugin.State.GetLocationIDIfRandomized(tagToSave.creatureName, out var apLocation))
             return;
 
         Plugin.LocationManager.CheckLocation(apLocation);

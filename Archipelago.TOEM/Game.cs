@@ -259,21 +259,9 @@ public class Game
     [HarmonyPrefix, HarmonyPatch(typeof(GetItemScreen), nameof(GetItemScreen.SetupScreen))]
     public static bool Patch_SetupGetItemScreen(GetItemScreen __instance, Item_SO pickedUpItem)
     {
-        bool include_basto = Plugin.State.SlotData?.Options.include_basto ?? true;
-        bool include_items = Plugin.State.SlotData?.Options.include_items ?? true;
-        bool include_cassettes = Plugin.State.SlotData?.Options.include_cassettes ?? true;
-        bool found = Data.ItemToApLocationId.TryGetValue(pickedUpItem.jsonSaveKey, out var apLocation);
-        if (found && !include_items)
+        if (!Plugin.State.GetLocationIDIfRandomized(pickedUpItem.jsonSaveKey, out var apLocation))
             return true;
-        if (!found)
-        {
-            found = Data.CassetteToApLocationId.TryGetValue(pickedUpItem.jsonSaveKey, out apLocation);
-            if (found && !include_cassettes)
-                return true;
-        }
-        if (!found || (!include_basto && apLocation >= ApLocationId.FirstBasto))
-            return true;
-            
+        
         var itemInfo = Plugin.Game.ScoutedLocations[(long)apLocation];
         string color = "00EEEE";
         if ((itemInfo.Flags & MultiClient.Net.Enums.ItemFlags.Trap) != 0)

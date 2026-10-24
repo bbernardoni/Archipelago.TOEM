@@ -81,6 +81,36 @@ public class State
         Seed = roomSeed;
     }
 
+    public bool GetLocationIDIfRandomized(string name, out ApLocationId apLocationId)
+    {
+        bool found = Data.QuestToApLocationId.TryGetValue(name, out apLocationId);
+        if (!found)
+            found = Data.CreatureToApLocationId.TryGetValue(name, out apLocationId);
+        if (!found)
+        {
+            bool include_items = SlotData?.Options.include_items ?? true;
+            found = Data.ItemToApLocationId.TryGetValue(name, out apLocationId);
+            if (found && !include_items)
+                return false;
+        }
+        if (!found)
+        {
+            bool include_cassettes = SlotData?.Options.include_cassettes ?? true;
+            found = Data.CassetteToApLocationId.TryGetValue(name, out apLocationId);
+            if (found && !include_cassettes)
+                return false;
+        }
+        if (!found)
+        {
+            bool include_achievements = Plugin.State.SlotData?.Options.include_achievements ?? true;
+            found = Data.CheevoToApLocationId.TryGetValue(name, out apLocationId);
+            if (found && !include_achievements)
+                return false;
+        }
+        bool include_basto = SlotData?.Options.include_basto ?? true;
+        return found && (include_basto || apLocationId < ApLocationId.FirstBasto);
+    }
+
     public void ClearConnection()
     {
         Seed = "";

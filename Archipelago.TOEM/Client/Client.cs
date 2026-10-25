@@ -389,4 +389,9 @@ public class Client
             }
         });
     }
+
+    public void SceneLoaded(int scene)
+    {
+        _session.DataStorage[GetDSKey("scene")] = scene;
+    }
 }

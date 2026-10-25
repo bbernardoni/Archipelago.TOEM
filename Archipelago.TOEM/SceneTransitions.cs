@@ -227,4 +227,15 @@ public class SceneManager
         if (__state)
             __instance.raftKey.saveValueExist = false;
     }
+
+    // And relock at the end
+    [HarmonyPrefix, HarmonyPatch(typeof(UnityEngine.SceneManagement.SceneManager), nameof(UnityEngine.SceneManagement.SceneManager.Internal_SceneLoaded))]
+    public static void Internal_SceneLoaded(UnityEngine.SceneManagement.Scene scene)
+    {
+        //Plugin.Logger.LogInfo($"UnityEngine.SceneManagement.SceneManager.Internal_SceneLoaded({scene.name} ; {scene.path})");
+        if (!Data.SceneToApSceneId.TryGetValue(scene.name, out var apSceneId))
+            apSceneId = ApSceneId.Menu;
+
+        Plugin.Client.SceneLoaded((int)apSceneId);
+    }
 }

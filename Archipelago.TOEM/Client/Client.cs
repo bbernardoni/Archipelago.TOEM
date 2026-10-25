@@ -219,11 +219,14 @@ public class Client
 
     public Dictionary<long, ApItemInfo> ScoutAllLocations()
     {
-        if (!Connected)
-        {
-            return null;
-        }
+        Dictionary<long, ApItemInfo> scoutData = Plugin.SaveFileManager.GetScoutData();
+        if (scoutData != null)
+            return scoutData;
 
+        if (!Connected)
+            return null;
+
+        Plugin.Logger.LogInfo("Fetching scout data");
         List<long> locations = [.. _session.Locations.AllLocations];
         var scouts = _session.Locations.ScoutLocationsAsync(locations.ToArray()).ContinueWith(task =>
         {
@@ -250,6 +253,7 @@ public class Client
             return itemInfos;
         });
         scouts.Wait();
+        Plugin.SaveFileManager.SaveScoutData(scouts.Result);
         return scouts.Result;
     }
 
@@ -379,6 +383,9 @@ public class Client
 
     public void TraverseEntrance(int entrance)
     {
+        if (!Connected)
+            return;
+
         string key = GetDSKey("traversed_entrances");
         _session.DataStorage[key].GetAsync<List<int>>().ContinueWith(task => {
             var traversedEntrances = task.Result;
@@ -392,6 +399,9 @@ public class Client
 
     public void SceneLoaded(int scene)
     {
+        if (!Connected)
+            return;
+
         _session.DataStorage[GetDSKey("scene")] = scene;
     }
 }

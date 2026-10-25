@@ -5,6 +5,7 @@ using System;
 using Quests;
 using SimpleJSON;
 using System.Collections.Generic;
+using Archipelago.MultiClient.Net.Enums;
 
 namespace Archipelago.TOEM;
 
@@ -13,6 +14,7 @@ public class SaveFileManager
 {
     private bool _shouldStartGame = false;
     private static readonly string ItemIndexSaveKey = "ArchipelagoItemIndex";
+    private static readonly string ScoutsSaveKey = "ArchipelagoScouts";
 
     [HarmonyPrefix, HarmonyPatch(typeof(TitleScreenMenu), nameof(TitleScreenMenu.StartGame))]
     public static bool StartGame()
@@ -89,6 +91,48 @@ public class SaveFileManager
             Plugin.Logger.LogInfo("SaveFileManager loading existing save");
             SaveManager.LoadGame(null);
         }
+    }
+    
+    public Dictionary<long, ApItemInfo> GetScoutData()
+    {
+        if (!SaveManager._GameSave_k__BackingField.HasKey(ScoutsSaveKey))
+            return null;
+        
+        Dictionary<long, ApItemInfo> scoutData = [];
+        foreach (var item in SaveManager._GameSave_k__BackingField[ScoutsSaveKey].AsArray)
+        {
+            JSONObject scoutEntryObj = item.Value.AsObject;
+            scoutData[scoutEntryObj["LocationId"]] = new ApItemInfo
+                {
+                    Id = scoutEntryObj["Id"],
+                    Name = scoutEntryObj["Name"],
+                    Flags = (ItemFlags)scoutEntryObj["Flags"].AsInt,
+                    Player = scoutEntryObj["Player"],
+                    PlayerName = scoutEntryObj["PlayerName"],
+                    IsLocal = scoutEntryObj["IsLocal"].AsBool,
+                    LocationId = scoutEntryObj["LocationId"],
+                    IsToem = scoutEntryObj["IsToem"].AsBool,
+                };
+        }
+        return scoutData;
+    }
+    
+    public void SaveScoutData(Dictionary<long, ApItemInfo> scoutData)
+    {
+        JSONArray scoutDataObj = new();
+        foreach (var scoutEntry in scoutData.Values)
+        {
+            JSONObject scoutEntryObj = new();
+            scoutEntryObj["Id"] = scoutEntry.Id;
+            scoutEntryObj["Name"] = scoutEntry.Name;
+            scoutEntryObj["Flags"] = (int)scoutEntry.Flags;
+            scoutEntryObj["Player"] = scoutEntry.Player;
+            scoutEntryObj["PlayerName"] = scoutEntry.PlayerName;
+            scoutEntryObj["LocationId"] = scoutEntry.LocationId;
+            scoutEntryObj["IsToem"] = scoutEntry.IsToem;
+            scoutDataObj.Add(scoutEntryObj);
+        }
+        SaveManager._GameSave_k__BackingField[ScoutsSaveKey] = scoutDataObj;
     }
 
     [HarmonyPostfix, HarmonyPatch(typeof(SaveManager.__c__DisplayClass59_0), nameof(SaveManager.__c__DisplayClass59_0._ResetGame_b__1))]
@@ -187,7 +231,7 @@ public class SaveFileManager
     
     public static string GetAPSaveName()
     {
-        return $"AP_{Plugin.Client.GetSeedName()}_{Plugin.Client.GetCurrentPlayer()}";
+        return $"AP_{Plugin.Client.GetSeedName()}_{Plugin.Client.GetCurrentPlayer()}_{Plugin.Client.GetCurrentTeam()}";
     }
 
     // Get/Set Root save folder

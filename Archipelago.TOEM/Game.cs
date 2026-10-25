@@ -53,7 +53,6 @@ public class Game
     {
         Plugin.LocationManager.SyncLocations();
         
-        // TODO cache location scouts
         ScoutedLocations = Plugin.Client.ScoutAllLocations();
     }
 

@@ -480,15 +480,21 @@ public enum ApItemGroup
 public enum ApConnectionId
 {
     // Menu
-    StartGame = 1,
+    StartGame = 7000,
+    HomelandaBusStop,
+    OaklavilleBusStop,
+    StanhamnBusStop,
+    LogcityBusStop,
+    KiirubergBusStop,
+    MountainTopBusStop,
     // Homelanda
-    PlayerRoomExit,
+    PlayerRoomExit = 1000,
     PlayerRoomEntrance,
     HomelandaHouseExit,
     HomelandaHouseEntrance,
     HomelandaBusPickup,
     // Oaklaville
-    OaklavilleBusPickup,
+    OaklavilleBusPickup = 2000,
     OaklavilleBusStopExit,
     OutsideHotelDown,
     OutsideHotelLeft,
@@ -524,7 +530,7 @@ public enum ApConnectionId
     OutsideRaveLeft,
     RaveExit,
     // Stanhamn
-    StanhamnBusPickup,
+    StanhamnBusPickup = 3000,
     PhotoGuildHutEntrance,
     StanhamnBusStopLeft,
     StanhamnBusStopRight,
@@ -559,7 +565,7 @@ public enum ApConnectionId
     OutsideHydroplantRight,
     HydroplantExit,
     // Logcity
-    LogcityBusPickup,
+    LogcityBusPickup = 4000,
     EscalatorUp,
     LogcityBusStopEntrance,
     ClockTowerLeft,
@@ -595,7 +601,7 @@ public enum ApConnectionId
     OutsideGalleryShowLeft,
     GalleryExit,
     // Kiiruberg
-    KiirubergBusPickup,
+    KiirubergBusPickup = 5000,
     KiirubergBusStopUp,
     BirthdayPartyRopeFromBottom,
     BalloonHouseEntrance,
@@ -653,10 +659,11 @@ public enum ApConnectionId
     SkiMountainTopLeft,
     SkiLiftDown,
     // Mountain top
+    MountainTopBusPickup = 6000,
     MountainTopBusStopClimb,
     ToemDescend,
     // Basto
-    BastoHarborGateFromTop,
+    BastoHarborGateFromTop = 8000,
     BastoHarborUp,
     BastoHarborGateFromBottom,
     VikingExpressBastoStop,

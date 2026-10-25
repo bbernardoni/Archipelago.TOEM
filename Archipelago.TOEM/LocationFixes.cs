@@ -137,8 +137,7 @@ internal class QuestDependentEvent_Patch
     [HarmonyPrefix, HarmonyPatch(nameof(QuestDependentEvent.DoQuestEvent))]
     public static bool DoQuestEvent(QuestDependentEvent __instance, bool isEnableEvent)
     {
-        bool include_items = Plugin.State.SlotData?.Options.include_items ?? true;
-        if (!include_items || __instance.questToCheck == null || __instance.questToCheck.currentStatus == Quest.QuestStatus.Undiscovered)
+        if (!Plugin.State.GetIfRandomized(ApLocationId.ItemFrisbee) || __instance.questToCheck == null || __instance.questToCheck.currentStatus == Quest.QuestStatus.Undiscovered)
             return true;
 
         long apLocation = 0;
@@ -193,9 +192,7 @@ internal class CheckQuestStatusNode_Patch
     [HarmonyPrefix, HarmonyPatch(nameof(CheckQuestStatusNode.EvaluateConditions))]
     public static bool EvaluateConditions(CheckQuestStatusNode __instance, ref bool __result)
     {
-        bool include_items = Plugin.State.SlotData?.Options.include_items ?? true;
-        bool include_basto = Plugin.State.SlotData?.Options.include_basto ?? true;
-        if (!include_items || !include_basto)
+        if (!Plugin.State.GetIfRandomized(ApLocationId.ItemWatergun))
             return true;
 
         var questToCheck = __instance.questToCheck;
@@ -222,9 +219,7 @@ internal class SetQuestStatusNode_Patch
     [HarmonyPrefix, HarmonyPatch(nameof(SetQuestStatusNode.TriggerNode))]
     public static bool TriggerNode(SetQuestStatusNode __instance)
     {
-        bool include_items = Plugin.State.SlotData?.Options.include_items ?? true;
-        bool include_basto = Plugin.State.SlotData?.Options.include_basto ?? true;
-        if (!include_items || !include_basto)
+        if (!Plugin.State.GetIfRandomized(ApLocationId.ItemWatergun))
             return true;
 
         var questToUpdate = __instance.questToUpdate;
@@ -241,6 +236,22 @@ internal class SetQuestStatusNode_Patch
         }
 
         return true;
+    }
+}
+
+[HarmonyPatch(typeof(SaveKeyDependentEvent))]
+internal class SaveKeyDependentEvent_Patch
+{
+    [HarmonyPrefix, HarmonyPatch(nameof(SaveKeyDependentEvent.Start))]
+    public static void Start(SaveKeyDependentEvent __instance)
+    {
+        if (!Plugin.State.GetIfRandomized(ApLocationId.ItemGhostGlasses))
+            return;
+
+        if (Plugin.Client.IsLocationChecked((long)ApLocationId.ItemGhostGlasses))
+        {
+            __instance.SetSaveKey();
+        }
     }
 }
 

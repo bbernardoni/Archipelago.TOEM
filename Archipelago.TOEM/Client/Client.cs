@@ -124,7 +124,7 @@ public class Client
             return;
         }
 
-        _session.DataStorage[Scope.Slot, "TraversedEntrances"].Initialize(new List<int>());
+        _session.DataStorage[GetDSKey("traversed_entrances")].Initialize(new List<int>());
         Plugin.State.SetupSession(slotData, _session.RoomState.Seed);
         Plugin.SaveFileManager.ConnectSave(_shouldStartGame);
         Plugin.UpdateConnectionInfo(Plugin.State.Uri, Plugin.State.SlotName, Plugin.State.Password);
@@ -347,6 +347,16 @@ public class Client
         return _session.ConnectionInfo.Slot;
     }
 
+    public int GetCurrentTeam()
+    {
+        if (!Connected)
+        {
+            return -1;
+        }
+
+        return _session.ConnectionInfo.Team;
+    }
+
     public string GetSeedName()
     {
         if (!Connected)
@@ -357,6 +367,11 @@ public class Client
         return _session.RoomState.Seed;
     }
 
+    public string GetDSKey(string key)
+    {
+        return $"toem_{GetCurrentPlayer()}_{GetCurrentTeam()}_{key}";
+    }
+
     public void SendMessage(string message)
     {
         _session?.Say(message);
@@ -364,12 +379,13 @@ public class Client
 
     public void TraverseEntrance(int entrance)
     {
-        _session.DataStorage[Scope.Slot, "TraversedEntrances"].GetAsync<List<int>>().ContinueWith(task => {
+        string key = GetDSKey("traversed_entrances");
+        _session.DataStorage[key].GetAsync<List<int>>().ContinueWith(task => {
             var traversedEntrances = task.Result;
             if(!traversedEntrances.Contains(entrance))
             {
                 traversedEntrances.Add(entrance);
-                _session.DataStorage[Scope.Slot, "TraversedEntrances"] = traversedEntrances;
+                _session.DataStorage[key] = traversedEntrances;
             }
         });
     }

@@ -50,9 +50,11 @@ public class State
     public string Password;
     public string Seed;
     public SlotData SlotData;
-    // Not sure what these were intended for
-    //public Dictionary<long, ApItemInfo> LocationInfos = [];
-    //public List<long> CheckedLocations { get; set; } = [];
+    
+    public Queue<ApItemInfo> IncomingItems { get; set; } = new();
+    public Dictionary<long, ApItemInfo> ScoutedLocations { get; set; } = [];
+    public List<long> OutgoingLocations { get; set; } = [];
+    public bool PendingCompletion { get; set; } = false;
     public int ItemIndex { get; set; } = 1;
 
     public State()
@@ -90,16 +92,16 @@ public class State
 
     public bool GetIfRandomized(ApLocationId apLocationId)
     {
-        if (!(SlotData?.Options.include_basto ?? true) && apLocationId >= ApLocationId.FirstBasto)
+        if (!SlotData.Options.include_basto && apLocationId >= ApLocationId.FirstBasto)
             return false;
 
         ApLocationGroup locationGroup = Data.GetLocationGroup(apLocationId);
         if (locationGroup == ApLocationGroup.Item)
-            return SlotData?.Options.include_items ?? true;
+            return SlotData.Options.include_items;
         if (locationGroup == ApLocationGroup.Cassette)
-            return SlotData?.Options.include_cassettes ?? true;
+            return SlotData.Options.include_cassettes;
         if (locationGroup == ApLocationGroup.Achievement)
-            return SlotData?.Options.include_achievements ?? true;
+            return SlotData.Options.include_achievements;
         return true;
     }
 

@@ -11,15 +11,19 @@ namespace Archipelago.TOEM;
 [BepInPlugin(MyPluginInfo.PLUGIN_GUID, MyPluginInfo.PLUGIN_NAME, MyPluginInfo.PLUGIN_VERSION)]
 public class Plugin : BasePlugin
 {
+    public const string Name = "TOEM: A Photo Adventure";
     public const string MinimumVersion = "2.2.0";
 
     public static ManualLogSource Logger { get; private set; }
     public static Client.Client Client { get; private set; }
     public static State State { get; set; }
-    public static Game Game { get; set; }
-    public static SceneManager SceneManager { get; set; }
-    public static LocationManager LocationManager { get; set; }
+    public static SlotOptions Options => State.SlotData.Options;
+
+    public static AssetManager AssetManager { get; set; }
     public static SaveFileManager SaveFileManager { get; set; }
+    public static ItemManager ItemManager { get; set; }
+    public static LocationManager LocationManager { get; set; }
+    public static SceneManager SceneManager { get; set; }
 
     private static ConfigEntry<string> _configUri;
     private static ConfigEntry<string> _configSlotName;
@@ -54,10 +58,12 @@ public class Plugin : BasePlugin
 
         Client = new();
         State = new(_configUri.Value, _configSlotName.Value, _configPassword.Value);
-        Game = new();
-        SceneManager = new();
-        LocationManager = new();
+
+        AssetManager = new();
         SaveFileManager = new();
+        ItemManager = new();
+        LocationManager = new();
+        SceneManager = new();
         ClientConsole.Initialize();
 
         Logger.LogInfo($"Plugin {MyPluginInfo.PLUGIN_GUID} v{MyPluginInfo.PLUGIN_VERSION} is loaded!");

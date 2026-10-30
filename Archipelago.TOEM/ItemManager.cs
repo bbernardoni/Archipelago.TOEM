@@ -3,21 +3,14 @@ using System.Collections.Generic;
 using Photographing;
 using Quests;
 using UnityEngine;
-using System.Reflection;
 using HarmonyLib;
 
 namespace Archipelago.TOEM;
 
 [HarmonyPatch]
-public class Game
+public class ItemManager
 {
-    public const string Name = "TOEM: A Photo Adventure";
-
-    public Queue<ApItemInfo> IncomingItems { get; private set; } = new();
-    //public Queue<ApItemInfo> IncomingMessages { get; private set; } = new();
-    public Dictionary<long, ApItemInfo> ScoutedLocations { get; private set; } = [];
     public bool IsServerItem { get; set; } = false;
-    public byte[] ApLogoData;
 
     private const float SoundCooldown = 1f;
     private static float LastStampSound = -SoundCooldown;
@@ -25,16 +18,15 @@ public class Game
     private static float LastItemSound = -SoundCooldown;
     
 
-    public Game()
+    [HarmonyPrefix, HarmonyPatch(typeof(GameManager), nameof(GameManager.Update))]
+    public static void Update_Prefix()
     {
-        var res = Assembly.GetExecutingAssembly().GetManifestResourceStream("Archipelago.TOEM.assets.aplogo.png");
-        ApLogoData = new byte[res.Length];
-        res.Read(ApLogoData, 0, ApLogoData.Length);
+        Plugin.ItemManager.Update();
     }
 
     public void Update()
     {
-        if (IncomingItems.TryDequeue(out var item))
+        if (Plugin.State.IncomingItems.TryDequeue(out var item))
         {
             if (item.Index < Plugin.State.ItemIndex /*&& !HasItem((ApItemId)item.Id)*/)
             {
@@ -47,13 +39,6 @@ public class Game
                 GiveItem((ApItemId)item.Id);
             }
         }
-    }
-
-    public void ConnectSave()
-    {
-        Plugin.LocationManager.SyncLocations();
-        
-        ScoutedLocations = Plugin.Client.ScoutAllLocations();
     }
 
     public void GiveItem(ApItemId apItemId)
@@ -104,7 +89,7 @@ public class Game
         return new(stampX, stampY);
     }
 
-    private void GiveStamp(Quest.QuestRegion stampRegion)
+    public void GiveStamp(Quest.QuestRegion stampRegion)
     {
         RegionData.RegionInfo region;
         // Find region if stamp is progressive
@@ -114,8 +99,7 @@ public class Game
                 Quest.QuestRegion.Home, Quest.QuestRegion.Forest, Quest.QuestRegion.Harbor,
                 Quest.QuestRegion.City, Quest.QuestRegion.Mountain,
                 ];
-            bool include_basto = Plugin.State.SlotData?.Options.include_basto ?? true;
-            if(include_basto)
+            if(Plugin.Options.include_basto)
                 questRegions.Add(Quest.QuestRegion.Resort);
             foreach(Quest.QuestRegion questRegion in questRegions)
             {
@@ -174,7 +158,7 @@ public class Game
         }
     }
 
-    private void GivePhoto()
+    public void GivePhoto()
     {
         // Photos are filler items any way so we don't do anything
         if(Time.time - LastPhotoSound > SoundCooldown)
@@ -184,7 +168,7 @@ public class Game
         }
     }
 
-    private void GiveGameItem(string itemName)
+    public void GiveGameItem(string itemName)
     {
         var item = GameManager.ItemDatabase.GetItemByName(itemName);
         IsServerItem = true;
@@ -200,71 +184,13 @@ public class Game
         }
     }
 
-    public void ExecuteCommand(string command_str)
-    {
-        string[] command = command_str.Split(" ");
-        if(command[0] == "help")
-        {
-            Client.ClientConsole.LogMessage("Use '!help' for server commands.");
-            Client.ClientConsole.LogMessage("/version");
-            Client.ClientConsole.LogMessage("    Print out the mod version");
-            Client.ClientConsole.LogMessage("/connect");
-            Client.ClientConsole.LogMessage("    Connect to slot with previously entered credentials");
-            Client.ClientConsole.LogMessage("/disconnect");
-            Client.ClientConsole.LogMessage("    Disconnect from current slot");
-        }
-        else if(command[0] == "tp")
-            Plugin.SceneManager.TpCommand(command);
-        else if(command[0] == "turbo")
-        {
-            int newSpeed = 20;
-            if(command.Length > 1)
-                int.TryParse(command[1], out newSpeed);
-
-            PlayerController.Instance.moveSpeed = newSpeed;
-        }
-        else if(command[0] == "intro")
-        {
-            List<string> introKeys = ["Got Bag", "Grandma Bye", "Got Camera", "Grandma Intro", "Kiosky Intro"];
-            foreach (var key in GameManager.QuestDatabase.saveKeys)
-            {
-                if (introKeys.Contains(key.jsonSaveKey))
-                    key.SetTrue();
-            }
-            foreach (var quest in GameManager.QuestDatabase.homeRegionQuests)
-            {
-                if (quest.jsonSaveKey == "Kiosky - Home" && quest.currentStatus == Quest.QuestStatus.Undiscovered)
-                    quest.SetStatus(Quest.QuestStatus.Ongoing);
-            }
-            GiveGameItem("Bag");
-            GiveGameItem("Camera");
-            GiveGameItem("Album");
-            GiveGameItem("CommunityCard");
-        }
-        else if(command[0] == "connect")
-            Plugin.Client.Connect();
-        else if(command[0] == "disconnect")
-            Plugin.Client.Disconnect();
-        else if(command[0] == "version")
-            Client.ClientConsole.LogMessage($"Toem AP mod version {MyPluginInfo.PLUGIN_VERSION}");
-        else if(command[0] == "asdf")
-        {
-            int num = 0;
-            if(command.Length > 1)
-                int.TryParse(command[1], out num);
-            
-        }
-        else
-            Client.ClientConsole.LogMessage("Unknown command. See /help for list of supported commands.");
-    }
-
     [HarmonyPrefix, HarmonyPatch(typeof(GetItemScreen), nameof(GetItemScreen.SetupScreen))]
     public static bool Patch_SetupGetItemScreen(GetItemScreen __instance, Item_SO pickedUpItem)
     {
         if (!Plugin.State.GetLocationIDIfRandomized(pickedUpItem.jsonSaveKey, out var apLocation))
             return true;
         
-        var itemInfo = Plugin.Game.ScoutedLocations[(long)apLocation];
+        var itemInfo = Plugin.State.ScoutedLocations[(long)apLocation];
         string color = "00EEEE";
         if ((itemInfo.Flags & MultiClient.Net.Enums.ItemFlags.Trap) != 0)
             color = "FA8072";
@@ -316,7 +242,7 @@ public class Game
         else
         {
             var tex = new Texture2D(256, 256, TextureFormat.RGBA32, false);
-            ImageConversion.LoadImage(tex, Plugin.Game.ApLogoData);
+            ImageConversion.LoadImage(tex, Plugin.AssetManager.ApLogoData);
             var ApLogo = Sprite.Create(tex, new Rect(0, 0, tex.width, tex.height), Vector2.zero);
             __instance.itemSprite.sprite = ApLogo;
             __instance.itemCategoryImage.sprite = null;

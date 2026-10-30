@@ -67,7 +67,7 @@ public class Client
         try
         {
             loginResult = _session.TryConnectAndLogin(
-                Game.Name,
+                Plugin.Name,
                 Plugin.State.SlotName,
                 ItemsHandlingFlags.AllItems,
                 new(MinArchipelagoVersion),
@@ -234,7 +234,7 @@ public class Client
             foreach (var entry in task.Result)
             {
                 var itemName = entry.Value.ItemDisplayName;
-                var isToem = entry.Value.ItemGame == Game.Name;
+                var isToem = entry.Value.ItemGame == Plugin.Name;
                 var player = entry.Value.Player;
                 var playerName = player.Alias ?? player.Name ?? $"Player #{player.Slot}";
 
@@ -276,7 +276,7 @@ public class Client
 
     public void ResendItems()
     {
-        Plugin.Game.IncomingItems.Clear();
+        Plugin.State.IncomingItems.Clear();
         int index = 0;
         foreach(var item in _session.Items.AllItemsReceived)
         {
@@ -292,9 +292,9 @@ public class Client
         var player = item.Player;
         var playerName = player.Alias ?? player.Name ?? $"Player #{player.Slot}";
 
-        if (Plugin.Game.IncomingItems.All(incoming => incoming.Index != index))
+        if (Plugin.State.IncomingItems.All(incoming => incoming.Index != index))
         {
-            Plugin.Game.IncomingItems.Enqueue(new()
+            Plugin.State.IncomingItems.Enqueue(new()
             {
                 Id = item.ItemId,
                 Name = itemName,

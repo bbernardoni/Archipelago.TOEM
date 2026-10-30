@@ -43,7 +43,7 @@ public class UIOptions
             apTabImageObj.transform.SetParent(apTab.transform, false);
             apTabImageObj.AddComponent<RectTransform>().localScale = new Vector3(0.85f, 0.85f, 1f);
             var tex = new Texture2D(256, 256, TextureFormat.RGBA32, false);
-            ImageConversion.LoadImage(tex, Plugin.Game.ApLogoData);
+            ImageConversion.LoadImage(tex, Plugin.AssetManager.ApLogoData);
             var ApLogo = Sprite.Create(tex, new Rect(0, 0, tex.width, tex.height), Vector2.zero);
             var apTabImage = apTabImageObj.AddComponent<Image>();
             apTabImage.color = new Color(0.8f, 0.8f, 0.8f, 0.2509804f);

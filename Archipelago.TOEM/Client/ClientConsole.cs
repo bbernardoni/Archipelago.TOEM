@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Quests;
 using System.Linq;
 using UnityEngine;
 using UnityEngine.UI;
@@ -142,7 +143,7 @@ public class ClientConsole(UIBase owner) : UniverseLib.UI.Panels.PanelBase(owner
             if (command[0] == '/')
             {
                 LogMessage(command);
-                Plugin.Game.ExecuteCommand(command[1..]);
+                ExecuteCommand(command[1..]);
             }
             else if (Plugin.Client.Connected)
             {
@@ -150,6 +151,64 @@ public class ClientConsole(UIBase owner) : UniverseLib.UI.Panels.PanelBase(owner
             }
         }
         commandInput.Text = "";
+    }
+
+    public static void ExecuteCommand(string command_str)
+    {
+        string[] command = command_str.Split(" ");
+        if(command[0] == "help")
+        {
+            LogMessage("Use '!help' for server commands.");
+            LogMessage("/version");
+            LogMessage("    Print out the mod version");
+            LogMessage("/connect");
+            LogMessage("    Connect to slot with previously entered credentials");
+            LogMessage("/disconnect");
+            LogMessage("    Disconnect from current slot");
+        }
+        else if(command[0] == "tp")
+            Plugin.SceneManager.TpCommand(command);
+        else if(command[0] == "turbo")
+        {
+            int newSpeed = 20;
+            if(command.Length > 1)
+                int.TryParse(command[1], out newSpeed);
+
+            PlayerController.Instance.moveSpeed = newSpeed;
+        }
+        else if(command[0] == "intro")
+        {
+            List<string> introKeys = ["Got Bag", "Grandma Bye", "Got Camera", "Grandma Intro", "Kiosky Intro"];
+            foreach (var key in GameManager.QuestDatabase.saveKeys)
+            {
+                if (introKeys.Contains(key.jsonSaveKey))
+                    key.SetTrue();
+            }
+            foreach (var quest in GameManager.QuestDatabase.homeRegionQuests)
+            {
+                if (quest.jsonSaveKey == "Kiosky - Home" && quest.currentStatus == Quest.QuestStatus.Undiscovered)
+                    quest.SetStatus(Quest.QuestStatus.Ongoing);
+            }
+            Plugin.ItemManager.GiveGameItem("Bag");
+            Plugin.ItemManager.GiveGameItem("Camera");
+            Plugin.ItemManager.GiveGameItem("Album");
+            Plugin.ItemManager.GiveGameItem("CommunityCard");
+        }
+        else if(command[0] == "connect")
+            Plugin.Client.Connect();
+        else if(command[0] == "disconnect")
+            Plugin.Client.Disconnect();
+        else if(command[0] == "version")
+            LogMessage($"Toem AP mod version {MyPluginInfo.PLUGIN_VERSION}");
+        else if(command[0] == "asdf")
+        {
+            int num = 0;
+            if(command.Length > 1)
+                int.TryParse(command[1], out num);
+            
+        }
+        else
+            LogMessage("Unknown command. See /help for list of supported commands.");
     }
 
     public static void LogMessage(string message)

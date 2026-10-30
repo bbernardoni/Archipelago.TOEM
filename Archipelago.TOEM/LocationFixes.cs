@@ -313,7 +313,7 @@ internal class TargetPracticeController_Patch
     [HarmonyPrefix, HarmonyPatch(nameof(TargetPracticeController.Start))]
     public static void Start(TargetPracticeController __instance)
     {
-        bool force_gate = Plugin.State.SlotData?.Options.force_basto_gate_open ?? false;
+        bool force_gate = Plugin.Options.force_basto_gate_open;
         if (force_gate && __instance.saveKey == "Target Practice - resortBusstop_0")
             __instance.SaveTargetPractice();
     }

@@ -145,7 +145,7 @@ public class SceneManager
 
     public static bool ShouldER(LoadingIndicator.LoadingType loadingType)
     {
-        int entrance_randomization = Plugin.State.SlotData?.Options.entrance_randomization ?? 0;
+        int entrance_randomization = Plugin.Options.entrance_randomization;
         return !Plugin.SceneManager.IsCmdTp && loadingType == LoadingIndicator.LoadingType.Standard && entrance_randomization != 0;
     }
 

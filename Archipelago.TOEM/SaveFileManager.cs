@@ -51,27 +51,29 @@ public class SaveFileManager
             switch (region.region)
             {
                 case Quest.QuestRegion.Home:
-                    region.requiredStamps = Plugin.State.SlotData.Options.homelanda_stamp_requirement;
+                    region.requiredStamps = Plugin.Options.homelanda_stamp_requirement;
                     break;
                 case Quest.QuestRegion.Forest:
-                    region.requiredStamps = Plugin.State.SlotData.Options.oaklaville_stamp_requirement;
+                    region.requiredStamps = Plugin.Options.oaklaville_stamp_requirement;
                     break;
                 case Quest.QuestRegion.Harbor:
-                    region.requiredStamps = Plugin.State.SlotData.Options.stanhamn_stamp_requirement;
+                    region.requiredStamps = Plugin.Options.stanhamn_stamp_requirement;
                     break;
                 case Quest.QuestRegion.City:
-                    region.requiredStamps = Plugin.State.SlotData.Options.logcity_stamp_requirement;
+                    region.requiredStamps = Plugin.Options.logcity_stamp_requirement;
                     break;
                 case Quest.QuestRegion.Mountain:
-                    region.requiredStamps = Plugin.State.SlotData.Options.kiiruberg_stamp_requirement;
+                    region.requiredStamps = Plugin.Options.kiiruberg_stamp_requirement;
                     break;
                 case Quest.QuestRegion.Resort:
-                    region.requiredStamps = Plugin.State.SlotData.Options.basto_stamp_requirement;
+                    region.requiredStamps = Plugin.Options.basto_stamp_requirement;
                     break;
             }
         }
 
-        Plugin.Game.ConnectSave();
+        Plugin.LocationManager.SyncLocations();
+        Plugin.State.ScoutedLocations = Plugin.Client.ScoutAllLocations();
+
         if (_shouldStartGame)
         {
             MenuManager.Instance.menu_TitleScreen.GetComponent<TitleScreenMenu>().StartGame();

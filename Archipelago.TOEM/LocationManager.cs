@@ -1,23 +1,33 @@
 using HarmonyLib;
 using Photographing;
 using Quests;
-using System;
-using System.Collections.Generic;
 
 namespace Archipelago.TOEM;
 
 [HarmonyPatch]
 public class LocationManager
 {
-    public List<long> OutgoingLocations { get; private set; } = [];
-    public bool PendingCompletion { get; private set; } = false;
-    
+    static private bool resetOnMenuRemoved = false;
+
+    [HarmonyPrefix, HarmonyPatch(typeof(GameManager), nameof(GameManager.Update))]
+    public static void Update_Prefix()
+    {
+        Plugin.LocationManager.Update();
+        if (resetOnMenuRemoved && CommunityController.instance.onMenuRemovedFromStack != null)
+        {
+            CommunityController.instance.onMenuRemovedFromStack.Invoke();
+            CommunityController.instance.onMenuRemovedFromStack = null;
+            OurInputManager.playerHasControl = true;
+            resetOnMenuRemoved = false;
+        }
+    }
+
     public void Update()
     {
         if (Plugin.Client.Connected)
         {
             SyncLocations();
-            if (PendingCompletion)
+            if (Plugin.State.PendingCompletion)
             {
                 Plugin.Client.SendCompletion();
             }
@@ -32,7 +42,7 @@ public class LocationManager
         }
         else
         {
-            OutgoingLocations.Add((long)location);
+            Plugin.State.OutgoingLocations.Add((long)location);
         }
     }
 
@@ -44,17 +54,17 @@ public class LocationManager
         }
         else
         {
-            PendingCompletion = true;
+            Plugin.State.PendingCompletion = true;
         }
     }
 
     public void SyncLocations()
     {
-        if (OutgoingLocations.Count == 0)
+        if (Plugin.State.OutgoingLocations.Count == 0)
             return;
 
-        Plugin.Client.SyncLocations(OutgoingLocations);
-        OutgoingLocations.Clear();
+        Plugin.Client.SyncLocations(Plugin.State.OutgoingLocations);
+        Plugin.State.OutgoingLocations.Clear();
     }
 
     [HarmonyPrefix, HarmonyPatch(typeof(CommunityController), nameof(CommunityController.GetStamp))]
@@ -67,14 +77,14 @@ public class LocationManager
         Plugin.LocationManager.CheckLocation(apLocation);
 
         // Delegate isn't setup until after this call. Delay removing until next Update prefix.
-        GameManager_Patch.resetOnMenuRemoved = true;
+        resetOnMenuRemoved = true;
         return false;
     }
     
     [HarmonyPrefix, HarmonyPatch(typeof(PlayerInventory), nameof(PlayerInventory.AddItem))]
     public static bool Patch_AddItem(Item_SO itemToAdd, int count, bool addedFromSaveFile)
     {
-        if (addedFromSaveFile || Plugin.Game.IsServerItem)
+        if (addedFromSaveFile || Plugin.ItemManager.IsServerItem)
             return true;
 
         Plugin.Logger.LogInfo($"PlayerInventory.AddItem({itemToAdd.jsonSaveKey}, {count}, {addedFromSaveFile})");
@@ -138,7 +148,7 @@ public class LocationManager
     public static void Patch_OnMenuOpen()
     {
         Plugin.Logger.LogInfo($"TheEndScreen.OnMenuOpen(), ResortEnd: {TheEndScreen.triggerResortEnding}");
-        bool include_basto = Plugin.State.SlotData?.Options.include_basto ?? true;
+        bool include_basto = Plugin.Options.include_basto;
         if (include_basto == TheEndScreen.triggerResortEnding)
         {
             Plugin.LocationManager.SendCompletion();

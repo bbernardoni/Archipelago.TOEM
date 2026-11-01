@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Archipelago.MultiClient.Net;
 using Archipelago.MultiClient.Net.Enums;
 
 namespace Archipelago.TOEM;
@@ -48,8 +49,11 @@ public class State
     public string Uri;
     public string SlotName;
     public string Password;
-    public string Seed;
+    
     public SlotData SlotData;
+    public string Seed;
+    public int Player;
+    public int Team;
     
     public Queue<ApItemInfo> IncomingItems { get; set; } = new();
     public Dictionary<long, ApItemInfo> ScoutedLocations { get; set; } = [];
@@ -77,10 +81,25 @@ public class State
         Password = password;
     }
 
-    public void SetupSession(SlotData slotData, string roomSeed)
+    public void SetupSession(SlotData slotData, in ArchipelagoSession session)
     {
         SlotData = slotData;
-        Seed = roomSeed;
+        Seed = session.RoomState.Seed;
+        Player = session.ConnectionInfo.Slot;
+        Team = session.ConnectionInfo.Team;
+    }
+
+    public void ClearConnection()
+    {
+        Seed = "";
+        SlotData = null;
+        //LocationInfos.Clear();
+        //CheckedLocations.Clear();
+    }
+
+    public void ClearSave()
+    {
+        ItemIndex = 1;
     }
 
     public bool GetLocationIDIfRandomized(string name, out ApLocationId apLocationId)
@@ -103,18 +122,5 @@ public class State
         if (locationGroup == ApLocationGroup.Achievement)
             return SlotData.Options.include_achievements;
         return true;
-    }
-
-    public void ClearConnection()
-    {
-        Seed = "";
-        SlotData = null;
-        //LocationInfos.Clear();
-        //CheckedLocations.Clear();
-    }
-
-    public void ClearSave()
-    {
-        ItemIndex = 1;
     }
 }

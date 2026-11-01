@@ -233,7 +233,7 @@ public class SaveFileManager
     
     public static string GetAPSaveName()
     {
-        return $"AP_{Plugin.Client.GetSeedName()}_{Plugin.Client.GetCurrentPlayer()}_{Plugin.Client.GetCurrentTeam()}";
+        return $"AP_{Plugin.State.Seed}_{Plugin.State.Player}_{Plugin.State.Team}";
     }
 
     // Get/Set Root save folder

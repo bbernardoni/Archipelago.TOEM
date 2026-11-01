@@ -125,7 +125,7 @@ public class Client
         }
 
         _session.DataStorage[GetDSKey("traversed_entrances")].Initialize(new List<int>());
-        Plugin.State.SetupSession(slotData, _session.RoomState.Seed);
+        Plugin.State.SetupSession(slotData, _session);
         Plugin.SaveFileManager.ConnectSave(_shouldStartGame);
         Plugin.UpdateConnectionInfo(Plugin.State.Uri, Plugin.State.SlotName, Plugin.State.Password);
         _ignoreLocations = false;
@@ -245,7 +245,7 @@ public class Client
                     Flags = entry.Value.Flags,
                     Player = player,
                     PlayerName = playerName,
-                    IsLocal = player == GetCurrentPlayer(),
+                    IsLocal = player == Plugin.State.Player,
                     LocationId = entry.Key,
                     IsToem = isToem,
                 };
@@ -301,7 +301,7 @@ public class Client
                 Flags = item.Flags,
                 Player = player,
                 PlayerName = playerName,
-                IsLocal = player == GetCurrentPlayer(),
+                IsLocal = player == Plugin.State.Player,
                 LocationId = item.LocationId,
                 Receiving = true,
                 Index = index,
@@ -341,39 +341,9 @@ public class Client
         */
     }
 
-    public int GetCurrentPlayer()
-    {
-        if (!Connected)
-        {
-            return -1;
-        }
-
-        return _session.ConnectionInfo.Slot;
-    }
-
-    public int GetCurrentTeam()
-    {
-        if (!Connected)
-        {
-            return -1;
-        }
-
-        return _session.ConnectionInfo.Team;
-    }
-
-    public string GetSeedName()
-    {
-        if (!Connected)
-        {
-            return "";
-        }
-
-        return _session.RoomState.Seed;
-    }
-
     public string GetDSKey(string key)
     {
-        return $"toem_{GetCurrentPlayer()}_{GetCurrentTeam()}_{key}";
+        return $"toem_{Plugin.State.Player}_{Plugin.State.Team}_{key}";
     }
 
     public void SendMessage(string message)

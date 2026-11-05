@@ -71,8 +71,9 @@ public class SaveFileManager
             }
         }
 
-        Plugin.LocationManager.SyncLocations();
-        Plugin.State.ScoutedLocations = Plugin.Client.ScoutAllLocations();
+        Plugin.LocationManager.Update();
+        if (Plugin.State.ScoutedLocations.Count == 0)
+            Plugin.State.ScoutedLocations = Plugin.Client.ScoutAllLocations();
 
         if (_shouldStartGame)
         {

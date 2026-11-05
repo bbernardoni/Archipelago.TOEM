@@ -63,8 +63,8 @@ public class LocationManager
         if (Plugin.State.OutgoingLocations.Count == 0)
             return;
 
-        Plugin.Client.SyncLocations(Plugin.State.OutgoingLocations);
-        Plugin.State.OutgoingLocations.Clear();
+        if (Plugin.Client.SyncLocations(Plugin.State.OutgoingLocations))
+            Plugin.State.OutgoingLocations.Clear();
     }
 
     [HarmonyPrefix, HarmonyPatch(typeof(CommunityController), nameof(CommunityController.GetStamp))]

@@ -124,5 +124,6 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - New connect UI
 - AP item get
 - Basto gate option
+- Revamped docs
 - Bugfix: Sandwich location missing honk requirement
 - Bugfix: Broken dreams bad OOL rule

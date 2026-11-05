@@ -124,8 +124,8 @@ public class Client
             return;
         }
 
-        _session.DataStorage[GetDSKey("traversed_entrances")].Initialize(new List<int>());
         Plugin.State.SetupSession(slotData, _session);
+        _session.DataStorage[GetDSKey("traversed_entrances")].Initialize(new List<int>());
         Plugin.SaveFileManager.ConnectSave(_shouldStartGame);
         Plugin.UpdateConnectionInfo(Plugin.State.Uri, Plugin.State.SlotName, Plugin.State.Password);
         _ignoreLocations = false;
@@ -265,6 +265,7 @@ public class Client
         }
 
         _session.SetGoalAchieved();
+        Plugin.State.PendingCompletion = false;
     }
 
     public void Session_ItemReceived(IReceivedItemsHelper helper)

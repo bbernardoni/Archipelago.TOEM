@@ -83,23 +83,22 @@ public class State
 
     public void SetupSession(SlotData slotData, in ArchipelagoSession session)
     {
+        if (Seed != session.RoomState.Seed || Player != session.ConnectionInfo.Slot || Team != session.ConnectionInfo.Team)
+        {
+            // Connecting to a new save, reset state
+            ScoutedLocations.Clear();
+            OutgoingLocations.Clear();
+            PendingCompletion = false;
+            ItemIndex = 1;
+        }
+
         SlotData = slotData;
         Seed = session.RoomState.Seed;
         Player = session.ConnectionInfo.Slot;
         Team = session.ConnectionInfo.Team;
-    }
-
-    public void ClearConnection()
-    {
-        Seed = "";
-        SlotData = null;
-        //LocationInfos.Clear();
-        //CheckedLocations.Clear();
-    }
-
-    public void ClearSave()
-    {
-        ItemIndex = 1;
+        
+        // items are always resent, so just clear them now
+        IncomingItems.Clear();
     }
 
     public bool GetLocationIDIfRandomized(string name, out ApLocationId apLocationId)

@@ -117,13 +117,16 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [2.2.0] - 2026-
 
-- Save system overhaul
-    - Vanilla save untouched
-    - Save per seed
-    - Options menu to view / delete saves
-- New connect UI
-- AP item get
-- Basto gate option
+- Note: only tested on the Steam release. I think it should work for the Epic and GoG versions but there might be some weirdness with the new save system. If you test one of these versions, let me know if it works or not.
+- Overhauled save system
+    - Vanilla save is now left untouched
+    - A new save is made for each seed allowing for playing multiple concurrent worlds
+    - New options menu to view / delete AP saves
+- Implemented new native looking UI for connecting
+- Reworked item get screen to show the actual item or ap logo as well as colored text based on classification
+- Added new "Force basto gate open" option which removes the requirement of the water popper attachment for exploring Basto
 - Revamped docs
 - Bugfix: Sandwich location missing honk requirement
 - Bugfix: Broken dreams bad OOL rule
+- Bugfix: Prevent pausing while on the ski lift or raft
+- Bugfix: Fix when an entrance is randomized to the ski lift or raft in the same scene

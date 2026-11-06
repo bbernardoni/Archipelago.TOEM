@@ -72,8 +72,7 @@ public class SaveFileManager
         }
 
         Plugin.LocationManager.Update();
-        if (Plugin.State.ScoutedLocations.Count == 0)
-            Plugin.State.ScoutedLocations = Plugin.Client.ScoutAllLocations();
+        LoadScoutData();
 
         if (_shouldStartGame)
         {
@@ -96,28 +95,36 @@ public class SaveFileManager
         }
     }
     
-    public Dictionary<long, ApItemInfo> GetScoutData()
+    public void LoadScoutData()
     {
-        if (!SaveManager._GameSave_k__BackingField.HasKey(ScoutsSaveKey))
-            return null;
-        
-        Dictionary<long, ApItemInfo> scoutData = [];
-        foreach (var item in SaveManager._GameSave_k__BackingField[ScoutsSaveKey].AsArray)
+        if (Plugin.State.ScoutedLocations.Count != 0)
         {
-            JSONObject scoutEntryObj = item.Value.AsObject;
-            scoutData[scoutEntryObj["LocationId"]] = new ApItemInfo
-                {
-                    Id = scoutEntryObj["Id"],
-                    Name = scoutEntryObj["Name"],
-                    Flags = (ItemFlags)scoutEntryObj["Flags"].AsInt,
-                    Player = scoutEntryObj["Player"],
-                    PlayerName = scoutEntryObj["PlayerName"],
-                    IsLocal = scoutEntryObj["IsLocal"].AsBool,
-                    LocationId = scoutEntryObj["LocationId"],
-                    IsToem = scoutEntryObj["IsToem"].AsBool,
-                };
+            if (!SaveManager._GameSave_k__BackingField.HasKey(ScoutsSaveKey))
+                Plugin.SaveFileManager.SaveScoutData(Plugin.State.ScoutedLocations);
         }
-        return scoutData;
+        else if (SaveManager._GameSave_k__BackingField.HasKey(ScoutsSaveKey))
+        {
+            foreach (var item in SaveManager._GameSave_k__BackingField[ScoutsSaveKey].AsArray)
+            {
+                JSONObject scoutEntryObj = item.Value.AsObject;
+                Plugin.State.ScoutedLocations[scoutEntryObj["LocationId"]] = new ApItemInfo
+                    {
+                        Id = scoutEntryObj["Id"],
+                        Name = scoutEntryObj["Name"],
+                        Flags = (ItemFlags)scoutEntryObj["Flags"].AsInt,
+                        Player = scoutEntryObj["Player"],
+                        PlayerName = scoutEntryObj["PlayerName"],
+                        IsLocal = scoutEntryObj["IsLocal"].AsBool,
+                        LocationId = scoutEntryObj["LocationId"],
+                        IsToem = scoutEntryObj["IsToem"].AsBool,
+                    };
+            }
+        }
+        else
+        {
+            Plugin.State.ScoutedLocations = Plugin.Client.ScoutAllLocations();
+            Plugin.SaveFileManager.SaveScoutData(Plugin.State.ScoutedLocations);
+        }
     }
     
     public void SaveScoutData(Dictionary<long, ApItemInfo> scoutData)

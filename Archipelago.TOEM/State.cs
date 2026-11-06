@@ -89,16 +89,14 @@ public class State
             ScoutedLocations.Clear();
             OutgoingLocations.Clear();
             PendingCompletion = false;
-            ItemIndex = 1;
         }
+        // ItemIndex is loaded from save (if it exists)
+        ItemIndex = 1;
 
         SlotData = slotData;
         Seed = session.RoomState.Seed;
         Player = session.ConnectionInfo.Slot;
         Team = session.ConnectionInfo.Team;
-        
-        // items are always resent, so just clear them now
-        IncomingItems.Clear();
     }
 
     public bool GetLocationIDIfRandomized(string name, out ApLocationId apLocationId)

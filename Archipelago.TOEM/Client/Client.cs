@@ -63,6 +63,9 @@ public class Client
         LoginResult loginResult;
         _attemptingConnection = true;
         _ignoreLocations = true;
+        
+        // items are always resent, so just clear them now
+        Plugin.State.IncomingItems.Clear();
 
         try
         {
@@ -219,12 +222,8 @@ public class Client
 
     public Dictionary<long, ApItemInfo> ScoutAllLocations()
     {
-        Dictionary<long, ApItemInfo> scoutData = Plugin.SaveFileManager.GetScoutData();
-        if (scoutData != null)
-            return scoutData;
-
         if (!Connected)
-            return null;
+            return [];
 
         Plugin.Logger.LogInfo("Fetching scout data");
         List<long> locations = [.. _session.Locations.AllLocations];
@@ -253,7 +252,6 @@ public class Client
             return itemInfos;
         });
         scouts.Wait();
-        Plugin.SaveFileManager.SaveScoutData(scouts.Result);
         return scouts.Result;
     }
 

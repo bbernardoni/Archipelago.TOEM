@@ -120,11 +120,8 @@ public class SceneManager
         }
 
         RaftController.isArrivingFromOtherSide = true;
-        SceneReference sceneRef = new()
-        {
-            scenePath = scenePath
-        };
-        SceneTransitionController._Instance_k__BackingField.DoSceneTransitionEvent(sceneRef, LoadingIndicator.LoadingType.Standard);
+        Cutscene.SetCutsceneState(true);
+        TpSceneTransitionEvent(scenePath);
     }
 
     // Tp to skilift
@@ -135,12 +132,26 @@ public class SceneManager
         PlayerController.Instance.ChangePlayerState(sitState);
 
         SkiliftController.CurrentState = SkiliftController.State.ArrivingOnOtherSide;
+        Cutscene.SetCutsceneState(true);
         SkiliftResetState = false;
-        SceneReference sceneRef = new()
+        TpSceneTransitionEvent(scenePath);
+    }
+    
+    // Reimplementation of DoSceneTransitionEvent without checking if we are reloading the same scene
+    public static void TpSceneTransitionEvent(string scenePath)
+    {
+        var transController = SceneTransitionController._Instance_k__BackingField;
+        transController.loadingIndicator.ActivateIndicator(LoadingIndicator.LoadingType.Standard);
+        if (SceneTransitionController._IsLoadingScene_k__BackingField)
+            return;
+
+        SceneTransitionController._IsLoadingScene_k__BackingField = true;
+        transController.enabled = true;
+        transController.sceneReference = new()
         {
             scenePath = scenePath
         };
-        SceneTransitionController._Instance_k__BackingField.DoSceneTransitionEvent(sceneRef, LoadingIndicator.LoadingType.Standard);
+        transController.StartCoroutine(transController.LoadSceneAsync());
     }
 
     public static bool ShouldER(LoadingIndicator.LoadingType loadingType)
@@ -228,7 +239,7 @@ public class SceneManager
             __instance.raftKey.saveValueExist = false;
     }
 
-    // And relock at the end
+    // Update scene loaded
     [HarmonyPrefix, HarmonyPatch(typeof(UnityEngine.SceneManagement.SceneManager), nameof(UnityEngine.SceneManagement.SceneManager.Internal_SceneLoaded))]
     public static void Internal_SceneLoaded(UnityEngine.SceneManagement.Scene scene)
     {

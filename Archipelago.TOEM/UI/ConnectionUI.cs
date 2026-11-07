@@ -100,8 +100,6 @@ public class ConnectionUI
     [HarmonyPrefix, HarmonyPatch(typeof(TitleScreenMenu), nameof(TitleScreenMenu.Update))]
     public static void Update(TitleScreenMenu __instance)
     {
-        Inputbox.UpdateAll();
-
         // Set connect button text
         var continueButton = __instance.mainGrid.gameObject.transform.GetChild(0).GetChild(0).GetChild(0).GetComponent<SuperTextMesh>();
         if (Plugin.Client.Connected)

@@ -10,7 +10,7 @@ namespace Archipelago.TOEM.UI;
 public class Inputbox
 {
     private static Inputbox SelectedInput = null;
-    private static List<Inputbox> Instances = [];
+    private static readonly List<Inputbox> Instances = [];
 
     public GameObject gameObject;
     public RectTransform holderRect;
@@ -169,6 +169,9 @@ public class Inputbox
             Inputbox oldSelectedInput = SelectedInput;
             foreach (var instance in Instances)
             {
+                if (!instance.IsActive)
+                    continue;
+
                 if (RectContainsPoint(instance.holderRect, Input.mousePosition) && !Plugin.Client.Connected)
                 {
                     new_selection = true;
@@ -189,7 +192,7 @@ public class Inputbox
                     instance.textMesh.ColorDeselect();
                 }
             }
-            if(!new_selection)
+            if(!new_selection && SelectedInput != null)
             {
                 SelectedInput = null;
                 UiButtonSystem.Instance.SetTargetButton(null);

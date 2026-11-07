@@ -1,5 +1,6 @@
 ﻿using System.Reflection;
 using Archipelago.TOEM.Client;
+using Archipelago.TOEM.UI;
 using BepInEx;
 using BepInEx.Configuration;
 using BepInEx.Logging;
@@ -65,6 +66,7 @@ public class Plugin : BasePlugin
         LocationManager = new();
         SceneManager = new();
         ClientConsole.Initialize();
+        UIManager.Init();
 
         Logger.LogInfo($"Plugin {MyPluginInfo.PLUGIN_GUID} v{MyPluginInfo.PLUGIN_VERSION} is loaded!");
     }

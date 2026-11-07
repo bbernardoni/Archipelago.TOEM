@@ -8,9 +8,11 @@ namespace Archipelago.TOEM.UI;
 public class AssetManager
 {
     private Font _NaikaiFont;
+    private Material _UIShadow;
 
     public byte[] ApLogoData;
-    public Font NaikaiFont => _NaikaiFont ??= GetNaikaiFont();
+    public Font NaikaiFont => _NaikaiFont ??= GetFont("NaikaiFont-noHearts");
+    public Material UIShadow => _UIShadow ??= GetMaterial("UIShadow");
 
     public AssetManager()
     {
@@ -19,10 +21,16 @@ public class AssetManager
         res.Read(ApLogoData, 0, ApLogoData.Length);
     }
 
-    private static Font GetNaikaiFont()
+    private static Font GetFont(string fontName)
     {
         var allFonts = Object.FindObjectsOfTypeAll(Il2CppType.Of<Font>());
-        return allFonts.First(font => font.name == "NaikaiFont-noHearts").Cast<Font>();
+        return allFonts.First(font => font.name == fontName).Cast<Font>();
+    }
+
+    private static Material GetMaterial(string materialName)
+    {
+        var allMaterials = Object.FindObjectsOfTypeAll(Il2CppType.Of<Material>());
+        return allMaterials.First(material => material.name == materialName).Cast<Material>();
     }
 
 }

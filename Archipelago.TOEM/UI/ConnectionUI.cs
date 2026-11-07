@@ -6,11 +6,11 @@ using UnityEngine.UI;
 namespace Archipelago.TOEM.UI;
 
 [HarmonyPatch]
-public class UIConnection
+public class ConnectionUI
 {
-    private static SuperTextMesh ConnectText = null;
+    private static Button ConnectButton = null;
     
-    public static Textbox CreateInput(string name, GameObject parent, Sprite sprite, Material textMaterial)
+    public static Inputbox CreateInput(string name, GameObject parent, Sprite sprite)
     {
         var labelHolder = new GameObject(name + " Label");
         labelHolder.transform.SetParent(parent.transform, false);
@@ -29,9 +29,9 @@ public class UIConnection
         ltMesh.size = 70;
         ltMesh.text = name;
         ltMesh.anchor = TextAnchor.MiddleLeft;
-        ltMesh.textMaterial = textMaterial;
+        ltMesh.textMaterial = Plugin.AssetManager.UIShadow;
 
-        return new Textbox(name, parent, sprite, textMaterial)
+        return new Inputbox(name, parent, sprite)
         {
             selectable = () => !Plugin.Client.Connected
         };
@@ -51,6 +51,8 @@ public class UIConnection
         var mainTransform = __instance.continueGameButtonContainer.transform;
         if(mainTransform.childCount == 3)
         {
+            Plugin.Logger.LogDebug($"Create Connection UI");
+
             var connectionGroup = new GameObject("Connection Group");
             connectionGroup.transform.SetParent(mainTransform, false);
             var cgRect = connectionGroup.AddComponent<RectTransform>();
@@ -64,17 +66,16 @@ public class UIConnection
             
             var topButton = __instance.topButton.gameObject;
             var buttonSprite = topButton.GetComponent<Image>().sprite;
-            var textMaterial = topButton.transform.GetChild(0).GetComponent<SuperTextMesh>().textMaterial;
             
-            var hostInput = CreateInput("Hostname:Port", connectionGroup, buttonSprite, textMaterial);
+            var hostInput = CreateInput("Hostname:Port", connectionGroup, buttonSprite);
             hostInput.SetText(Plugin.State.Uri);
             hostInput.onDeselect = text => Plugin.State.Uri = text;
-            var slotInput = CreateInput("Player Name", connectionGroup, buttonSprite, textMaterial);
+            var slotInput = CreateInput("Player Name", connectionGroup, buttonSprite);
             slotInput.SetText(Plugin.State.SlotName);
             slotInput.onDeselect = text => Plugin.State.SlotName = text;
             slotInput.textRect.anchoredPosition = new Vector2(32, -10);
             slotInput.overrideFont = Plugin.AssetManager.NaikaiFont;
-            var passwordInput = CreateInput("Password", connectionGroup, buttonSprite, textMaterial);
+            var passwordInput = CreateInput("Password", connectionGroup, buttonSprite);
             passwordInput.SetText(Plugin.State.Password);
             passwordInput.onDeselect = text => Plugin.State.Password = text;
             passwordInput.password = true;
@@ -85,37 +86,8 @@ public class UIConnection
             var spacerElem = spacer.AddComponent<LayoutElement>();
             spacerElem.preferredHeight = 60;
             
-            var connectHolder = new GameObject("Connect Button");
-            connectHolder.transform.SetParent(connectionGroup.transform, false);
-            connectHolder.AddComponent<RectTransform>();
-            var chElem = connectHolder.AddComponent<LayoutElement>();
-            chElem.preferredHeight = 120;
-            var chImage = connectHolder.AddComponent<Image>();
-            chImage.color = new Color(0, 0, 0, 0.2901961f);
-            chImage.type = Image.Type.Sliced;
-            chImage.sprite = buttonSprite;
-            var chButton = connectHolder.AddComponent<UiButton>();
-            
-            var connectText = new GameObject("Text");
-            connectText.transform.SetParent(connectHolder.transform, false);
-            var ctRect = connectText.AddComponent<RectTransform>();
-            ctRect.anchorMin = Vector2.zero;
-            ctRect.anchorMax = Vector2.one;
-            ctRect.anchoredPosition = new Vector2(32, 0);
-            ctRect.sizeDelta = Vector2.zero;
-            ConnectText = connectText.AddComponent<SuperTextMesh>();
-            ConnectText.size = 70;
-            ConnectText.text = "Connect";
-            ConnectText.anchor = TextAnchor.MiddleLeft;
-            ConnectText.textMaterial = textMaterial;
-            ConnectText.ColorDeselect();
-            
-            chButton.onClick = new UnityEvent();
-            chButton.onHover = new UnityEvent();
-            chButton.onExit = new UnityEvent();
-            chButton.onClick.AddListener((UnityAction)ToggleConnection);
-            chButton.onHover.AddListener((UnityAction)ConnectText.ColorSelect);
-            chButton.onExit.AddListener((UnityAction)ConnectText.ColorDeselect);
+            ConnectButton = new Button("Connect", connectionGroup, buttonSprite);
+            ConnectButton.button.onClick.AddListener((UnityAction)ToggleConnection);
         }
     }
 
@@ -130,18 +102,18 @@ public class UIConnection
     [HarmonyPrefix, HarmonyPatch(typeof(TitleScreenMenu), nameof(TitleScreenMenu.Update))]
     public static void Update(TitleScreenMenu __instance)
     {
-        Textbox.UpdateAll();
+        Inputbox.UpdateAll();
 
         // Set connect button text
         var continueButton = __instance.mainGrid.gameObject.transform.GetChild(0).GetChild(0).GetChild(0).GetComponent<SuperTextMesh>();
         if (Plugin.Client.Connected)
         {
-            ConnectText.text = "Disconnect";
+            ConnectButton.text.text = "Disconnect";
             continueButton.text = "<w=sassy>Start";
         }
         else
         {
-            ConnectText.text = "Connect";
+            ConnectButton.text.text = "Connect";
             continueButton.text = "Connect & Start";
             if (SaveFileManager.GetRootFolder() != "Save")
             {

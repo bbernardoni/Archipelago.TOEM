@@ -9,7 +9,7 @@ using UnityEngine.UI;
 namespace Archipelago.TOEM.UI;
 
 [HarmonyPatch]
-public class UIOptions
+public class OptionsUI
 {
     private static List<GameObject> apCategoryGameObjects;
 

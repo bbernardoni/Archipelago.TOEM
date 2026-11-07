@@ -7,11 +7,10 @@ using UnityEngine.UI;
 namespace Archipelago.TOEM.UI;
 
 [HarmonyPatch]
-public class Textbox
+public class Inputbox
 {
-
-    private static Textbox SelectedInput = null;
-    private static List<Textbox> Instances = [];
+    private static Inputbox SelectedInput = null;
+    private static List<Inputbox> Instances = [];
 
     public GameObject gameObject;
     public RectTransform holderRect;
@@ -30,8 +29,10 @@ public class Textbox
     private float caretToggleTime = float.MaxValue;
     private KeyCode heldKey = KeyCode.None;
     private float heldRepeatTime = float.MaxValue;
+
+    public bool IsActive => gameObject != null && gameObject.activeInHierarchy;
     
-    public Textbox(string name, GameObject parent, Sprite sprite, Material textMaterial)
+    public Inputbox(string name, GameObject parent, Sprite sprite)
     {
         gameObject = new GameObject(name + " Input");
         gameObject.transform.SetParent(parent.transform, false);
@@ -59,7 +60,7 @@ public class Textbox
         textMesh.size = 70;
         textMesh.text = "";
         textMesh.anchor = TextAnchor.MiddleLeft;
-        textMesh.textMaterial = textMaterial;
+        textMesh.textMaterial = Plugin.AssetManager.UIShadow;
         textMesh.ColorDeselect();
 
         var caret = new GameObject("Caret");
@@ -151,19 +152,22 @@ public class Textbox
 
     public static void UpdateAll()
     {
-        if (SelectedInput != null && !SelectedInput.gameObject.activeInHierarchy)
+        // Clear stale selected input
+        if (SelectedInput != null && !SelectedInput.IsActive)
             SelectedInput = null;
+
+        // Remove destroyed inputs
+        for (int i = Instances.Count - 1; i >= 0; i--)
+            if (Instances[i].gameObject == null)
+                Instances.RemoveAt(i);
 
         // Check if an Input field was clicked
         if (Input.GetMouseButtonDown(0))
         {
             bool new_selection = false;
-            Textbox oldSelectedInput = SelectedInput;
+            Inputbox oldSelectedInput = SelectedInput;
             foreach (var instance in Instances)
             {
-                if (!instance.gameObject.activeInHierarchy)
-                    continue;
-
                 if (RectContainsPoint(instance.holderRect, Input.mousePosition) && !Plugin.Client.Connected)
                 {
                     new_selection = true;
@@ -286,7 +290,7 @@ public class Textbox
     [HarmonyPrefix, HarmonyPatch(typeof(UiButtonSystem), nameof(UiButtonSystem.SetTargetButton))]
     public static bool SetTargetButton()
     {
-        return SelectedInput == null || !SelectedInput.gameObject.activeInHierarchy;
+        return SelectedInput == null || !SelectedInput.IsActive;
     }
 
     [HarmonyPrefix, HarmonyPatch(typeof(SuperTextMesh), nameof(SuperTextMesh.Rebuild), [typeof(float), typeof(bool), typeof(bool)])]

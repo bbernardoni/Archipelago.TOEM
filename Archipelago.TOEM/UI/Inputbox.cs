@@ -32,7 +32,7 @@ public class Inputbox
 
     public bool IsActive => gameObject != null && gameObject.activeInHierarchy;
     
-    public Inputbox(string name, GameObject parent, Sprite sprite)
+    public Inputbox(string name, GameObject parent)
     {
         gameObject = new GameObject(name + " Input");
         gameObject.transform.SetParent(parent.transform, false);
@@ -43,7 +43,8 @@ public class Inputbox
         var ihImage = gameObject.AddComponent<Image>();
         ihImage.color = new Color(0, 0, 0, 0.2901961f);
         ihImage.type = Image.Type.Sliced;
-        ihImage.sprite = sprite;
+        ihImage.sprite = Sprite.Create(Plugin.AssetManager.ScrollBox, new Rect(318, 350, 60, 64), 
+            Vector2.zero, 100, 0, SpriteMeshType.Tight, new Vector4(29, 33, 29, 29));
         button = gameObject.AddComponent<UiButton>();
         button.HasClickSound = false;
         button.animateButton = false;

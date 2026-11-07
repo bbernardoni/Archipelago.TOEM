@@ -10,7 +10,7 @@ public class ConnectionUI
 {
     private static Button ConnectButton = null;
     
-    public static Inputbox CreateInput(string name, GameObject parent, Sprite sprite)
+    public static Inputbox CreateInput(string name, GameObject parent)
     {
         var labelHolder = new GameObject(name + " Label");
         labelHolder.transform.SetParent(parent.transform, false);
@@ -31,7 +31,7 @@ public class ConnectionUI
         ltMesh.anchor = TextAnchor.MiddleLeft;
         ltMesh.textMaterial = Plugin.AssetManager.UIShadow;
 
-        return new Inputbox(name, parent, sprite)
+        return new Inputbox(name, parent)
         {
             selectable = () => !Plugin.Client.Connected
         };
@@ -51,8 +51,6 @@ public class ConnectionUI
         var mainTransform = __instance.continueGameButtonContainer.transform;
         if(mainTransform.childCount == 3)
         {
-            Plugin.Logger.LogDebug($"Create Connection UI");
-
             var connectionGroup = new GameObject("Connection Group");
             connectionGroup.transform.SetParent(mainTransform, false);
             var cgRect = connectionGroup.AddComponent<RectTransform>();
@@ -67,15 +65,15 @@ public class ConnectionUI
             var topButton = __instance.topButton.gameObject;
             var buttonSprite = topButton.GetComponent<Image>().sprite;
             
-            var hostInput = CreateInput("Hostname:Port", connectionGroup, buttonSprite);
+            var hostInput = CreateInput("Hostname:Port", connectionGroup);
             hostInput.SetText(Plugin.State.Uri);
             hostInput.onDeselect = text => Plugin.State.Uri = text;
-            var slotInput = CreateInput("Player Name", connectionGroup, buttonSprite);
+            var slotInput = CreateInput("Player Name", connectionGroup);
             slotInput.SetText(Plugin.State.SlotName);
             slotInput.onDeselect = text => Plugin.State.SlotName = text;
             slotInput.textRect.anchoredPosition = new Vector2(32, -10);
             slotInput.overrideFont = Plugin.AssetManager.NaikaiFont;
-            var passwordInput = CreateInput("Password", connectionGroup, buttonSprite);
+            var passwordInput = CreateInput("Password", connectionGroup);
             passwordInput.SetText(Plugin.State.Password);
             passwordInput.onDeselect = text => Plugin.State.Password = text;
             passwordInput.password = true;
@@ -86,7 +84,7 @@ public class ConnectionUI
             var spacerElem = spacer.AddComponent<LayoutElement>();
             spacerElem.preferredHeight = 60;
             
-            ConnectButton = new Button("Connect", connectionGroup, buttonSprite);
+            ConnectButton = new Button("Connect", connectionGroup);
             ConnectButton.button.onClick.AddListener((UnityAction)ToggleConnection);
         }
     }

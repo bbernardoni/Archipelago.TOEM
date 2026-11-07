@@ -11,7 +11,7 @@ public class Button
     public SuperTextMesh text;
     public UiButton button;
 
-    public Button(string name, GameObject parent, Sprite sprite)
+    public Button(string name, GameObject parent)
     {
         var connectHolder = new GameObject(name+" Button");
         connectHolder.transform.SetParent(parent.transform, false);
@@ -21,7 +21,8 @@ public class Button
         var chImage = connectHolder.AddComponent<Image>();
         chImage.color = new Color(0, 0, 0, 0.2901961f);
         chImage.type = Image.Type.Sliced;
-        chImage.sprite = sprite;
+        chImage.sprite = Sprite.Create(Plugin.AssetManager.ScrollBox, new Rect(318, 350, 60, 64), 
+            Vector2.zero, 100, 0, SpriteMeshType.Tight, new Vector4(29, 33, 29, 29));
         button = connectHolder.AddComponent<UiButton>();
         
         var connectText = new GameObject("Text");

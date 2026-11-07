@@ -245,7 +245,7 @@ internal class SaveKeyDependentEvent_Patch
     [HarmonyPrefix, HarmonyPatch(nameof(SaveKeyDependentEvent.Start))]
     public static void Start(SaveKeyDependentEvent __instance)
     {
-        if (!Plugin.State.GetIfRandomized(ApLocationId.ItemGhostGlasses))
+        if (!Plugin.State.GetIfRandomized(ApLocationId.ItemGhostGlasses) || __instance.saveKey.jsonSaveKey != "SuneCalm")
             return;
 
         if (Plugin.Client.IsLocationChecked((long)ApLocationId.ItemGhostGlasses))

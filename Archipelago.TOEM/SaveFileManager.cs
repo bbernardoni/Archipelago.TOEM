@@ -275,13 +275,13 @@ public class SaveFileManager
     [HarmonyPrefix, HarmonyPatch(typeof(LaundryBearStorage), nameof(LaundryBearStorage.SaveFile))]
     public static void SaveFile(string path)
     {
-        Plugin.Logger.LogInfo($"LaundryBearStorage.SaveFile({path})");
+        Plugin.Logger.LogDebug($"LaundryBearStorage.SaveFile({path})");
     }
 
     [HarmonyPrefix, HarmonyPatch(typeof(LaundryBearStorage), nameof(LaundryBearStorage.Load))]
     public static void Load(string fileToLoad)
     {
-        Plugin.Logger.LogInfo($"LaundryBearStorage.Load({fileToLoad})");
+        Plugin.Logger.LogDebug($"LaundryBearStorage.Load({fileToLoad})");
     }
 
     // Take settings from base Save folder

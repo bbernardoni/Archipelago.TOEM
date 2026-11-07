@@ -97,7 +97,6 @@ public class UIConnection
     [HarmonyPostfix, HarmonyPatch(typeof(TitleScreenMenu), nameof(TitleScreenMenu.OnMenuOpen))]
     public static void OnMenuOpen_Postfix(TitleScreenMenu __instance)
     {
-        Plugin.Logger.LogInfo("TitleScreenMenu.OnMenuOpen() postfix");
         __instance.hasSaveFile = true;
         __instance.SetupTitleScreen(true, false);
         __instance.displayPlaytime.gameObject.active = false;

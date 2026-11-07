@@ -69,7 +69,6 @@ internal class InventoryHasItem_Patch
                 !(apLocation == ApLocationId.ItemBastoTicket && __instance.name == "Note From Grandma - Resort"))
             return true;
 
-        Plugin.Logger.LogInfo($"InventoryHasItem.ExecuteEvent() : {__instance.item.jsonSaveKey}");
         if (Plugin.Client.IsLocationChecked((long)apLocation))
         {
             if (!__instance.executeMoreThanOnce)
@@ -93,7 +92,6 @@ internal class InventoryHasItem_Patch
         if (apLocation != ApLocationId.ItemBastoTicket)
             return true;
 
-        Plugin.Logger.LogInfo($"InventoryHasItem.ExecuteEvent({addedItem.jsonSaveKey}) : {__instance.item.jsonSaveKey}");
         if (Plugin.Client.IsLocationChecked((long)apLocation) || BastoTicketFound)
         {
             if (!__instance.executeMoreThanOnce)
@@ -149,7 +147,6 @@ internal class QuestDependentEvent_Patch
         if (apLocation == 0)
                 return true;
 
-        Plugin.Logger.LogInfo($"QuestDependentEvent.DoQuestEvent() : {__instance.name}");
         if (Plugin.Client.IsLocationChecked(apLocation))
         {
             if (!isEnableEvent || __instance.executeCompletedOnEnable)
@@ -177,7 +174,6 @@ internal class CheckItemNode_Patch
                     apLocation == ApLocationId.ItemSkiGoggles || apLocation == ApLocationId.ItemScarf ||
                     apLocation == ApLocationId.ItemBastoTicket || apLocation == ApLocationId.TapeSquirrelHotel))
             {
-                Plugin.Logger.LogInfo($"CheckItemNode.EvaluateConditions() : {item.jsonSaveKey}");
                 __result = Plugin.Client.IsLocationChecked((long)apLocation);
                 return false;
             }
@@ -198,7 +194,6 @@ internal class CheckQuestStatusNode_Patch
         var questToCheck = __instance.questToCheck;
         if (questToCheck.jsonSaveKey == "Kiosky Gate -Backend Quest")
         {
-            Plugin.Logger.LogInfo($"CheckQuestStatusNode.EvaluateConditions() : {questToCheck.jsonSaveKey}");
             if(questToCheck.currentStatus != Quest.QuestStatus.Completed ||
                     Plugin.Client.IsLocationChecked((long)ApLocationId.ItemWatergun))
                 return true;
@@ -225,7 +220,6 @@ internal class SetQuestStatusNode_Patch
         var questToUpdate = __instance.questToUpdate;
         if (questToUpdate.jsonSaveKey == "Kiosky Gate -Backend Quest")
         {
-            Plugin.Logger.LogInfo($"SetQuestStatusNode.TriggerNode() : {questToUpdate.jsonSaveKey}");
             if(questToUpdate.currentStatus != Quest.QuestStatus.Completed)
                 return true;
 
@@ -294,7 +288,6 @@ internal class Achievement_CompleteQuestRegion_Patch
         if (!Plugin.State.GetLocationIDIfRandomized(__instance.name, out _))
             return true;
 
-        Plugin.Logger.LogInfo($"Achievements.Achievement_CompleteQuestRegion.Progress(): {__instance.name}");
         var regionQuests = GameManager.QuestDatabase.GetQuestList(__instance.region);
         foreach (var quest in regionQuests)
         {

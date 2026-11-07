@@ -16,7 +16,6 @@ public class UIOptions
     [HarmonyPostfix, HarmonyPatch(typeof(OptionsMenu), nameof(OptionsMenu.OnMenuInitialize))]
     public static void OnMenuInitialize_Postfix(OptionsMenu __instance)
     {
-        Plugin.Logger.LogInfo("OptionsMenu.OnMenuInitialize() postfix");
         var scrollFieldTransform = __instance.transform.GetChild(2);
         var tabFieldTransform = scrollFieldTransform.GetChild(1);
         if(tabFieldTransform.childCount == 2)

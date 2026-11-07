@@ -70,7 +70,6 @@ public class LocationManager
     [HarmonyPrefix, HarmonyPatch(typeof(CommunityController), nameof(CommunityController.GetStamp))]
     public static bool Patch_GetStamp(Quest completedQuest)
     {
-        Plugin.Logger.LogInfo($"CommunityController.GetStamp({completedQuest})");
         if (!Plugin.State.GetLocationIDIfRandomized(completedQuest.jsonSaveKey, out var apLocation))
             return true;
 
@@ -127,7 +126,6 @@ public class LocationManager
     [HarmonyPrefix, HarmonyPatch(typeof(Achievements.BaseAchievement), nameof(Achievements.BaseAchievement.CompleteAchievement))]
     public static void Patch_CompleteAchievement(Achievements.BaseAchievement __instance, bool previouslyCompleted)
     {
-        Plugin.Logger.LogInfo($"Achievements.BaseAchievement.CompleteAchievement({previouslyCompleted}): {__instance.name}");
         if (!Plugin.State.GetLocationIDIfRandomized(__instance.name, out var apLocation))
             return;
 
@@ -137,7 +135,6 @@ public class LocationManager
     [HarmonyPrefix, HarmonyPatch(typeof(PhotoCompendium), nameof(PhotoCompendium.AddToCompendium))]
     public static void Patch_AddToCompendium(CompendiumPhotoTag tagToSave)
     {
-        Plugin.Logger.LogInfo($"PhotoCompendium.AddToCompendium({tagToSave.creatureName})");
         if (!Plugin.State.GetLocationIDIfRandomized(tagToSave.creatureName, out var apLocation))
             return;
 

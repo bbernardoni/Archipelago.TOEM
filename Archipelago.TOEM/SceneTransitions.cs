@@ -40,7 +40,7 @@ public class SceneManager
         var scenePair = Data.EntranceToSceneTransition[targetEntrance];
         string targetSceneName = scenePair.Item1;
         int newTransitionNodeIndex = scenePair.Item2;
-        Plugin.Logger.LogInfo($"Randomized scene: {targetSceneName} ({newTransitionNodeIndex})");
+        Plugin.Logger.LogDebug($"Randomized scene: {targetSceneName} ({newTransitionNodeIndex})");
 
         Tp(targetSceneName, newTransitionNodeIndex);
         Plugin.Client.TraverseEntrance((int)sourceEntrance);
@@ -243,7 +243,6 @@ public class SceneManager
     [HarmonyPrefix, HarmonyPatch(typeof(UnityEngine.SceneManagement.SceneManager), nameof(UnityEngine.SceneManagement.SceneManager.Internal_SceneLoaded))]
     public static void Internal_SceneLoaded(UnityEngine.SceneManagement.Scene scene)
     {
-        //Plugin.Logger.LogInfo($"UnityEngine.SceneManagement.SceneManager.Internal_SceneLoaded({scene.name} ; {scene.path})");
         if (!Data.SceneToApSceneId.TryGetValue(scene.name, out var apSceneId))
             apSceneId = ApSceneId.Menu;
 

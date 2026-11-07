@@ -1,5 +1,5 @@
-using HarmonyLib;
 using System.Text.RegularExpressions;
+using HarmonyLib;
 
 namespace Archipelago.TOEM;
 

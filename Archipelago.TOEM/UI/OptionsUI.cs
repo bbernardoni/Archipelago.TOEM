@@ -6,7 +6,7 @@ using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UI;
 
-namespace Archipelago.TOEM;
+namespace Archipelago.TOEM.UI;
 
 [HarmonyPatch]
 public class UIOptions

@@ -6,7 +6,7 @@ using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UI;
 
-namespace Archipelago.TOEM;
+namespace Archipelago.TOEM.UI;
 
 [HarmonyPatch]
 public class UIConnection
@@ -28,7 +28,6 @@ public class UIConnection
     private static float CaretToggleTime = float.MaxValue;
     private static SuperTextMesh ConnectText = null;
     private static string Password;
-    private static Font NaikaiFont;
 
     public static void CreateInput(string name, GameObject parent, Sprite sprite, Material textMaterial)
     {
@@ -109,9 +108,6 @@ public class UIConnection
         var mainTransform = __instance.continueGameButtonContainer.transform;
         if(mainTransform.childCount == 3)
         {
-            var allFonts = Object.FindObjectsOfTypeAll(Il2CppType.Of<Font>());
-            NaikaiFont = allFonts.First(font => font.name == "NaikaiFont-noHearts").Cast<Font>();
-
             var connectionGroup = new GameObject("Connection Group");
             connectionGroup.transform.SetParent(mainTransform, false);
             var cgRect = connectionGroup.AddComponent<RectTransform>();
@@ -424,7 +420,7 @@ public class UIConnection
     public static void Rebuild(SuperTextMesh __instance)
     {
         if (Inputs.Count > 2 && __instance == Inputs[1].text)
-            SuperTextMesh.font = NaikaiFont;
+            SuperTextMesh.font = Plugin.AssetManager.NaikaiFont;
     }
 
     [HarmonyPostfix, HarmonyPatch(typeof(SuperTextMesh), nameof(SuperTextMesh.Rebuild), [typeof(float), typeof(bool), typeof(bool)])]

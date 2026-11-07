@@ -1,7 +1,7 @@
+using System.Collections.Generic;
+using Dialogue;
 using HarmonyLib;
 using Quests;
-using Dialogue;
-using System.Collections.Generic;
 
 namespace Archipelago.TOEM;
 

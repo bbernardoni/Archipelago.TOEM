@@ -19,7 +19,7 @@ public class Plugin : BasePlugin
     public static State State { get; set; }
     public static SlotOptions Options => State.SlotData.Options;
 
-    public static AssetManager AssetManager { get; set; }
+    public static UI.AssetManager AssetManager { get; set; }
     public static SaveFileManager SaveFileManager { get; set; }
     public static ItemManager ItemManager { get; set; }
     public static LocationManager LocationManager { get; set; }

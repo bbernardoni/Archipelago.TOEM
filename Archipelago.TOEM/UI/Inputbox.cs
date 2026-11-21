@@ -41,6 +41,7 @@ public class Inputbox
     private float heldRepeatTime = float.MaxValue;
     private readonly float leftPadding;
     private readonly float rightPadding;
+    private readonly float spacePadding;
 
     public bool IsActive => gameObject != null && gameObject.activeInHierarchy;
     
@@ -88,6 +89,7 @@ public class Inputbox
         {
             leftPadding = 10;
             rightPadding = 10;
+            spacePadding = 16;
             holderElem.preferredHeight = 43;
             holderElem.minHeight = 43;
             button.hoverType = UiButtonSystem.HoverType.None;
@@ -104,6 +106,7 @@ public class Inputbox
         {
             leftPadding = 32;
             rightPadding = 16;
+            spacePadding = 35;
             holderElem.preferredHeight = 120;
             selectionRect.anchoredPosition = new Vector2(0, 26);
             selectionRect.sizeDelta = new Vector2(0, 70);
@@ -118,8 +121,16 @@ public class Inputbox
     {
         text = textString;
         if (caretIndex > text.Length - 1)
-            SetCursorLast();
+            SetCursorLast(true);
         textObj.textMesh.text = password? new string('*', text.Length): text;
+    }
+
+    private Vector2 GetEndVert(int charIndex, int vertIndex = 1)
+    {
+        Vector2 vert = (Vector2)textObj.textMesh.endVerts[charIndex*4+vertIndex];
+        if (textObj.textMesh.info[charIndex].chGlyphIndex == ' ' && (vertIndex%4 == 1 || vertIndex%4 == 2))
+            vert.x += spacePadding;
+        return vert;
     }
     
     public void FindClosesCaretIndex(Vector2 point)
@@ -134,7 +145,7 @@ public class Inputbox
                 continue;
             Vector2 charPos = Vector2.zero;
             for (int j = 0; j < 4; j++)
-                charPos += (Vector2)textObj.textMesh.endVerts[i*4+j];
+                charPos += GetEndVert(i, j);
             charPos /= 4;
             Vector2 worldPos = (Vector2)uiCam.WorldToScreenPoint(textObj.textRect.TransformPoint(charPos));
             float dist = (point - worldPos).sqrMagnitude;
@@ -164,7 +175,7 @@ public class Inputbox
                 testIndex++;
             }
         }
-        float offset = stmIndex < 0? 0: textObj.textMesh.endVerts[stmIndex*4+1].x;
+        float offset = stmIndex < 0? 0: GetEndVert(stmIndex).x;
         offset += textObj.textRect.anchoredPosition.x;
         return offset;
     }
@@ -174,9 +185,11 @@ public class Inputbox
         caretRect.anchoredPosition = new Vector2(IndexToOffset(caretIndex), caretRect.anchoredPosition.y);
     }
 
-    public void SetCursorLast()
+    public void SetCursorLast(bool resetSelection = false)
     {
         caretIndex = text.Length - 1;
+        if (resetSelection)
+            selectStartIndex = caretIndex;
         UpdateCaretPos();
     }
 
@@ -219,7 +232,7 @@ public class Inputbox
     {
         // Clear stale selected input
         if (SelectedInput != null && !SelectedInput.IsActive)
-            SelectedInput = null;
+            SelectedInput.Deselect();
 
         // Remove destroyed inputs
         for (int i = Instances.Count - 1; i >= 0; i--)
@@ -413,15 +426,15 @@ public class Inputbox
             textObj.textRect.anchoredPosition = new Vector2(textX, textObj.textRect.anchoredPosition.y);
             caretRect.anchoredPosition = new Vector2(leftPadding, caretRect.anchoredPosition.y);
         }
-        var endVerts = textObj.textMesh.endVerts;
-        if (endVerts.Count == 0 || leftPadding + endVerts[^2].x <= caretXMax)
+        float endX = textObj.textMesh.info.Count == 0? 0 : GetEndVert(textObj.textMesh.info.Count - 1).x;
+        if (leftPadding + endX <= caretXMax)
         {
             textObj.textRect.anchoredPosition = new Vector2(leftPadding, textObj.textRect.anchoredPosition.y);
             UpdateCaretPos();
         }
-        else if (textX + endVerts[^2].x < caretXMax)
+        else if (textX + endX < caretXMax)
         {
-            textX = caretXMax - endVerts[^2].x;
+            textX = caretXMax - endX;
             textObj.textRect.anchoredPosition = new Vector2(textX, textObj.textRect.anchoredPosition.y);
             UpdateCaretPos();
         }

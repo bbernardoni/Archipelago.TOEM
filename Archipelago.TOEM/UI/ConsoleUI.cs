@@ -224,7 +224,7 @@ public class ConsoleUI
             commandInput.Text = "";
         else
             commandInput.Text = CommandHist[^(CommandHistIndex + 1)];
-        commandInput.SetCursorLast();
+        commandInput.SetCursorLast(true);
     }
 
     public static void PrevCommand()

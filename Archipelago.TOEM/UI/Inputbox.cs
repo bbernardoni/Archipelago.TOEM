@@ -19,6 +19,7 @@ public class Inputbox
     public Image bgImage;
     public UiButton button;
     public Text textObj;
+    public RectTransform selectionRect;
     public RectTransform caretRect;
 
     public bool password = false;
@@ -35,6 +36,7 @@ public class Inputbox
 
     private string text = "";
     private int caretIndex = -1;
+    private int selectStartIndex = -1;
     private float caretToggleTime = float.MaxValue;
     private KeyCode heldKey = KeyCode.None;
     private float heldRepeatTime = float.MaxValue;
@@ -64,6 +66,15 @@ public class Inputbox
         textObj.textMesh.text = "";
         textObj.textMesh.uiWrap = false;
         textObj.textMesh.ColorDeselect();
+        
+        var selection = new GameObject("Selection");
+        selection.transform.SetParent(gameObject.transform, false);
+        selectionRect = selection.AddComponent<RectTransform>();
+        selectionRect.anchorMin = Vector2.zero;
+        selectionRect.anchorMax = Vector2.zero;
+        selectionRect.pivot = Vector2.zero;
+        selection.AddComponent<Image>().color = new Color(1, 1, 1, 0.6f);
+        selection.active = false;
 
         var caret = new GameObject("Caret");
         caret.transform.SetParent(gameObject.transform, false);
@@ -85,6 +96,8 @@ public class Inputbox
             textObj.textMesh.size = 30;
             textObj.textMesh.textMaterial = Plugin.AssetManager.UIDefault;
             textObj.overrideFont = Plugin.AssetManager.NaikaiFont;
+            selectionRect.anchoredPosition = new Vector2(0, 6);
+            selectionRect.sizeDelta = new Vector2(0, 30);
             caretRect.anchoredPosition3D = new Vector3(0, 6, 1);
             caretRect.sizeDelta = new Vector2(1, 30);
         }
@@ -93,6 +106,8 @@ public class Inputbox
             leftPadding = 32;
             rightPadding = 16;
             holderElem.preferredHeight = 120;
+            selectionRect.anchoredPosition = new Vector2(0, 26);
+            selectionRect.sizeDelta = new Vector2(0, 70);
             caretRect.anchoredPosition3D = new Vector3(0, 26, 1);
             caretRect.sizeDelta = new Vector2(2, 70);
         }
@@ -135,25 +150,29 @@ public class Inputbox
         UpdateCaretPos();
     }
     
-    public void UpdateCaretPos()
+    public float IndexToOffset(int index)
     {
         int stmIndex = -1;
-        int testCaretIndex = 0;
-        if (caretIndex >= 0)
+        int testIndex = 0;
+        if (index >= 0)
         {
             for (stmIndex = 0; stmIndex < textObj.textMesh.info.Count; stmIndex++)
             {
                 if (textObj.textMesh.info[stmIndex].chGlyphIndex < 0)
                     continue;
-                if (testCaretIndex == caretIndex)
+                if (testIndex == index)
                     break;
-                testCaretIndex++;
+                testIndex++;
             }
         }
-        float caretX = textObj.textRect.anchoredPosition.x;
-        if (stmIndex >= 0)
-            caretX += textObj.textMesh.endVerts[stmIndex*4+1].x;
-        caretRect.anchoredPosition = new Vector2(caretX, caretRect.anchoredPosition.y);
+        float offset = stmIndex < 0? 0: textObj.textMesh.endVerts[stmIndex*4+1].x;
+        offset += textObj.textRect.anchoredPosition.x;
+        return offset;
+    }
+    
+    public void UpdateCaretPos()
+    {
+        caretRect.anchoredPosition = new Vector2(IndexToOffset(caretIndex), caretRect.anchoredPosition.y);
     }
 
     public void SetCursorLast()
@@ -166,6 +185,7 @@ public class Inputbox
     {
         onDeselect(text);
         caretRect.gameObject.active = false;
+        selectionRect.gameObject.active = false;
         textObj.textMesh.ColorDeselect();
         SelectedInput = null;
     }
@@ -183,6 +203,17 @@ public class Inputbox
         caretToggleTime = Time.time + 0.5f;
         textObj.textMesh.ColorSelect();
         SetCursorLast();
+    }
+
+    private void DeleteSelection()
+    {
+        if (caretIndex == selectStartIndex)
+            return;
+        int removeLen = Math.Abs(caretIndex - selectStartIndex);
+        int removeStart = Math.Min(caretIndex, selectStartIndex);
+        text = text.Remove(removeStart + 1, removeLen);
+        caretIndex = removeStart;
+        selectStartIndex = removeStart;
     }
     
     public static void UpdateAll()
@@ -208,12 +239,16 @@ public class Inputbox
                 if (UiButtonSystem.hoverButton == instance.button && instance.selectable())
                 {
                     newSelection = true;
+                    bool sameInput = SelectedInput == instance;
                     instance.Select();
                     instance.FindClosesCaretIndex(Input.mousePosition);
+                    if (!sameInput || !(Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift)))
+                        instance.selectStartIndex = instance.caretIndex;
                 }
                 else
                 {
                     instance.caretRect.gameObject.active = false;
+                    instance.selectionRect.gameObject.active = false;
                     instance.textObj.textMesh.ColorDeselect();
                 }
             }
@@ -243,22 +278,31 @@ public class Inputbox
         {
             if (c == '\b')
             {
-                if (caretIndex >= 0)
+                if (caretIndex != selectStartIndex)
+                {
+                    DeleteSelection();
+                    inspectMenu.onLetterErasedSound.PlaySound();
+                }
+                else if (caretIndex >= 0)
                 {
                     text = text.Remove(caretIndex, 1);
                     caretIndex--;
+                    selectStartIndex = caretIndex;
                     inspectMenu.onLetterErasedSound.PlaySound();
                 }
             }
             else if (c >= ' ')
             {
+                DeleteSelection();
                 caretIndex++;
+                selectStartIndex = caretIndex;
                 text = text.Insert(caretIndex, c.ToString());
                 inspectMenu.onLetterAddedSound.PlaySound();
             }
         }
     
         // Handle manual repeating of delete, and arrows
+        bool shiftHeld = Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift);
         KeyCode action = KeyCode.None;
         if (Input.GetKeyDown(KeyCode.Delete))
         {
@@ -289,16 +333,28 @@ public class Inputbox
 
         if (action == KeyCode.Delete && caretIndex+1 < text.Length)
         {
-            text = text.Remove(caretIndex+1, 1);
-            inspectMenu.onLetterErasedSound.PlaySound();
+            if (caretIndex != selectStartIndex)
+            {
+                DeleteSelection();
+                inspectMenu.onLetterErasedSound.PlaySound();
+            }
+            else if (caretIndex+1 < text.Length)
+            {
+                text = text.Remove(caretIndex+1, 1);
+                inspectMenu.onLetterErasedSound.PlaySound();
+            }
         }
         else if (action == KeyCode.LeftArrow && caretIndex >= 0)
         {
             caretIndex--;
+            if (!shiftHeld)
+                selectStartIndex = caretIndex;
         }
         else if (action == KeyCode.RightArrow && caretIndex+1 < text.Length)
         {
             caretIndex++;
+            if (!shiftHeld)
+                selectStartIndex = caretIndex;
         }
         
         if (Input.GetKeyDown(KeyCode.UpArrow))
@@ -311,10 +367,12 @@ public class Inputbox
         bool ctrlHeld = Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl);
         if (ctrlHeld && Input.GetKeyDown(KeyCode.V))
         {
+            DeleteSelection();
             string clipboard = GUIUtility.systemCopyBuffer;
             clipboard = clipboard.Replace("\n", "").Replace("\r", "");
             text = text.Insert(caretIndex+1, clipboard);
             caretIndex += clipboard.Length;
+            selectStartIndex = caretIndex;
             inspectMenu.onLetterAddedSound.PlaySound();
         }
         
@@ -345,6 +403,15 @@ public class Inputbox
             textX = caretXMax - endVerts[^2].x;
             textObj.textRect.anchoredPosition = new Vector2(textX, textObj.textRect.anchoredPosition.y);
             UpdateCaretPos();
+        }
+        selectionRect.gameObject.active = caretIndex != selectStartIndex;
+        if (selectionRect.gameObject.active)
+        {
+            float selectOffset = IndexToOffset(selectStartIndex);
+            float leftX = Math.Min(selectOffset, caretRect.anchoredPosition.x);
+            float width = Math.Abs(selectOffset - caretRect.anchoredPosition.x);
+            selectionRect.anchoredPosition = new Vector2(leftX, selectionRect.anchoredPosition.y);
+            selectionRect.sizeDelta = new Vector2(width, selectionRect.sizeDelta.y);
         }
 
         // Caret blink

@@ -365,15 +365,37 @@ public class Inputbox
             onEnter();
 
         bool ctrlHeld = Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl);
-        if (ctrlHeld && Input.GetKeyDown(KeyCode.V))
+        if (ctrlHeld)
         {
-            DeleteSelection();
-            string clipboard = GUIUtility.systemCopyBuffer;
-            clipboard = clipboard.Replace("\n", "").Replace("\r", "");
-            text = text.Insert(caretIndex+1, clipboard);
-            caretIndex += clipboard.Length;
-            selectStartIndex = caretIndex;
-            inspectMenu.onLetterAddedSound.PlaySound();
+            if (Input.GetKeyDown(KeyCode.V))
+            {
+                DeleteSelection();
+                string clipboard = GUIUtility.systemCopyBuffer;
+                clipboard = clipboard.Replace("\n", "").Replace("\r", "");
+                text = text.Insert(caretIndex+1, clipboard);
+                caretIndex += clipboard.Length;
+                selectStartIndex = caretIndex;
+                inspectMenu.onLetterAddedSound.PlaySound();
+            }
+            else if (Input.GetKeyDown(KeyCode.C) && caretIndex != selectStartIndex)
+            {
+                int selectLen = Math.Abs(caretIndex - selectStartIndex);
+                int selectStart = Math.Min(caretIndex, selectStartIndex);
+                GUIUtility.systemCopyBuffer = text.Substring(selectStart + 1, selectLen);
+            }
+            else if (Input.GetKeyDown(KeyCode.X) && caretIndex != selectStartIndex)
+            {
+                int selectLen = Math.Abs(caretIndex - selectStartIndex);
+                int selectStart = Math.Min(caretIndex, selectStartIndex);
+                GUIUtility.systemCopyBuffer = text.Substring(selectStart + 1, selectLen);
+                DeleteSelection();
+                inspectMenu.onLetterErasedSound.PlaySound();
+            }
+            else if (Input.GetKeyDown(KeyCode.A))
+            {
+                selectStartIndex = -1;
+                SetCursorLast();
+            }
         }
         
         SetText(text);

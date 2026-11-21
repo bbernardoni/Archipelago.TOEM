@@ -77,6 +77,7 @@ public class Inputbox
             this.small = true;
             holderElem.preferredHeight = 43;
             holderElem.minHeight = 43;
+            button.hoverType = UiButtonSystem.HoverType.None;
             textObj.textRect.anchoredPosition = new Vector2(10, -5);
             textObj.textMesh.size = 30;
             textObj.textMesh.textMaterial = Plugin.AssetManager.UIDefault;
@@ -164,8 +165,19 @@ public class Inputbox
         UpdateCaretPos();
     }
 
+    public void Deselect()
+    {
+        onDeselect(text);
+        caretRect.gameObject.active = false;
+        textObj.textMesh.ColorDeselect();
+        SelectedInput = null;
+    }
+
     public void Select()
     {
+        if (SelectedInput != null && SelectedInput != this)
+            SelectedInput.Deselect();
+
         SelectedInput = null;
         UiButtonSystem.Instance.ForceSetTargetButton(button);
         SelectedInput = this;
@@ -191,7 +203,6 @@ public class Inputbox
         if (Input.GetMouseButtonDown(0))
         {
             bool newSelection = false;
-            Inputbox oldSelectedInput = SelectedInput;
             foreach (var instance in Instances)
             {
                 if (!instance.IsActive)
@@ -205,8 +216,6 @@ public class Inputbox
                 }
                 else
                 {
-                    if (oldSelectedInput == instance)
-                        instance.onDeselect(instance.text);
                     instance.caretRect.gameObject.active = false;
                     instance.textObj.textMesh.ColorDeselect();
                 }

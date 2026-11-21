@@ -66,6 +66,18 @@ public class ConnectionUI
             passwordInput.Text = Plugin.State.Password;
             passwordInput.onDeselect = text => Plugin.State.Password = text;
             passwordInput.password = true;
+            hostInput.onDown = slotInput.Select;
+            hostInput.onEnter = slotInput.Select;
+            slotInput.onUp = hostInput.Select;
+            slotInput.onDown = passwordInput.Select;
+            slotInput.onEnter = passwordInput.Select;
+            passwordInput.onUp = slotInput.Select;
+            passwordInput.onDown = () =>
+            {
+                passwordInput.Deselect();
+                UiButtonSystem.Instance.SetTargetButton(ConnectButton.button);
+            };
+            passwordInput.onEnter = passwordInput.onDown;
 
             var spacer = new GameObject("Spacer");
             spacer.transform.SetParent(connectionGroup.transform, false);

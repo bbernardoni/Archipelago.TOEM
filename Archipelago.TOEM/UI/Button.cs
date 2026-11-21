@@ -1,48 +1,56 @@
+using System;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UI;
-using System.Linq;
-using Il2CppInterop.Runtime;
 
 namespace Archipelago.TOEM.UI;
 
 public class Button
 {
-    public SuperTextMesh text;
+    public LayoutElement layoutElem;
+    public Text text;
+    public Image bgImage;
     public UiButton button;
 
-    public Button(string name, GameObject parent)
+    public Button(string name, GameObject parent, bool small = false)
     {
         var connectHolder = new GameObject(name+" Button");
         connectHolder.transform.SetParent(parent.transform, false);
         connectHolder.AddComponent<RectTransform>();
-        var chElem = connectHolder.AddComponent<LayoutElement>();
-        chElem.preferredHeight = 120;
-        var chImage = connectHolder.AddComponent<Image>();
-        chImage.color = new Color(0, 0, 0, 0.2901961f);
-        chImage.type = Image.Type.Sliced;
-        chImage.sprite = Sprite.Create(Plugin.AssetManager.ScrollBox, new Rect(318, 350, 60, 64), 
+        layoutElem = connectHolder.AddComponent<LayoutElement>();
+        bgImage = connectHolder.AddComponent<Image>();
+        bgImage.color = new Color(0, 0, 0, 0.2901961f);
+        bgImage.type = Image.Type.Sliced;
+        bgImage.sprite = Sprite.Create(Plugin.AssetManager.ScrollBox, new Rect(318, 350, 60, 64), 
             Vector2.zero, 100, 0, SpriteMeshType.Tight, new Vector4(29, 33, 29, 29));
         button = connectHolder.AddComponent<UiButton>();
-        
-        var connectText = new GameObject("Text");
-        connectText.transform.SetParent(connectHolder.transform, false);
-        var ctRect = connectText.AddComponent<RectTransform>();
-        ctRect.anchorMin = Vector2.zero;
-        ctRect.anchorMax = Vector2.one;
-        ctRect.anchoredPosition = new Vector2(32, 0);
-        ctRect.sizeDelta = Vector2.zero;
-        text = connectText.AddComponent<SuperTextMesh>();
-        text.size = 70;
-        text.text = name;
-        text.anchor = TextAnchor.MiddleLeft;
-        text.textMaterial = Plugin.AssetManager.UIShadow;
-        text.ColorDeselect();
-        
         button.onClick = new UnityEvent();
         button.onHover = new UnityEvent();
         button.onExit = new UnityEvent();
-        button.onHover.AddListener((UnityAction)text.ColorSelect);
-        button.onExit.AddListener((UnityAction)text.ColorDeselect);
+        text = new(name, connectHolder);
+        
+        if (small)
+        {
+            layoutElem.preferredHeight = 43;
+            layoutElem.minHeight = 43;
+            layoutElem.minWidth = 80;
+            text.textRect.anchoredPosition = Vector2.zero;
+            text.textMesh.size = 30;
+            text.textMesh.alignment = SuperTextMesh.Alignment.Center;
+            text.textMesh.textMaterial = Plugin.AssetManager.UIDefault;
+            text.textMesh.ColorSelect();
+        }
+        else
+        {
+            layoutElem.preferredHeight = 120;
+            text.textMesh.ColorDeselect();
+            button.onHover.AddListener((UnityAction)text.textMesh.ColorSelect);
+            button.onExit.AddListener((UnityAction)text.textMesh.ColorDeselect);
+        }
+    }
+
+    public void AddOnClick(Action onClickAction)
+    {
+        button.onClick.AddListener((UnityAction)onClickAction);
     }
 }

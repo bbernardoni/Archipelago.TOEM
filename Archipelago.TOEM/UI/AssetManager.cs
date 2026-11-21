@@ -9,11 +9,13 @@ public class AssetManager
 {
     private Font _NaikaiFont;
     private Material _UIShadow;
+    private Material _UIDefault;
     private Texture2D _ScrollBox;
 
     public byte[] ApLogoData;
     public Font NaikaiFont => _NaikaiFont ??= GetFont("NaikaiFont-noHearts");
     public Material UIShadow => _UIShadow ??= GetMaterial("UIShadow");
+    public Material UIDefault => _UIDefault ??= GetMaterial("UIDefault");
     public Texture2D ScrollBox => _ScrollBox ??= GetTexture2D("ScrollBox");
 
     public AssetManager()

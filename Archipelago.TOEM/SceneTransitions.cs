@@ -51,31 +51,31 @@ public class SceneManager
     {
         if(command.Length != 3)
         {
-            Client.ClientConsole.LogMessage("tp command takes two arguements '/tp <sceneName> <transitionNodeIndex>'");
+            UI.ConsoleUI.LogMessage("tp command takes two arguements '/tp <sceneName> <transitionNodeIndex>'");
             return;
         }
 
         string sceneName = command[1];
         if (!int.TryParse(command[2], out int transitionNodeIndex))
         {
-            Client.ClientConsole.LogMessage("tp command's second argument must be an integer");
+            UI.ConsoleUI.LogMessage("tp command's second argument must be an integer");
             return;
         }
 
         if (!Data.SceneTransitionToEntrance.ContainsKey(sceneName))
         {
-            Client.ClientConsole.LogMessage("Unknown sceneName for tp command");
+            UI.ConsoleUI.LogMessage("Unknown sceneName for tp command");
             return;
         }
         var sceneEntry = Data.SceneTransitionToEntrance[sceneName];
         if (!sceneEntry.ContainsKey(transitionNodeIndex))
         {
-            Client.ClientConsole.LogMessage("Unknown transitionNodeIndex for tp command");
-            Client.ClientConsole.LogMessage("Valid indices: "+string.Join(",", sceneEntry.Keys));
+            UI.ConsoleUI.LogMessage("Unknown transitionNodeIndex for tp command");
+            UI.ConsoleUI.LogMessage("Valid indices: "+string.Join(",", sceneEntry.Keys));
             return;
         }
 
-        Client.ClientConsole.LogMessage($"Teleporting to scene {sceneName} ({transitionNodeIndex})");
+        UI.ConsoleUI.LogMessage($"Teleporting to scene {sceneName} ({transitionNodeIndex})");
         Tp(sceneName, transitionNodeIndex);
     }
 

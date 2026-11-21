@@ -20,5 +20,12 @@ public class UIManager : MonoBehaviour
     public void Update()
     {
         Inputbox.UpdateAll();
+        Text.UpdateAll();
+        ConsoleUI.Update();
+    }
+
+    public void LateUpdate()
+    {
+        ConsoleUI.LateUpdate();
     }
 }

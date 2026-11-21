@@ -1,6 +1,5 @@
 using HarmonyLib;
 using UnityEngine;
-using UnityEngine.Events;
 using UnityEngine.UI;
 
 namespace Archipelago.TOEM.UI;
@@ -18,18 +17,8 @@ public class ConnectionUI
         var lhElem = labelHolder.AddComponent<LayoutElement>();
         lhElem.preferredHeight = 90;
         
-        var labelText = new GameObject("LabelText");
-        labelText.transform.SetParent(labelHolder.transform, false);
-        var ltRect = labelText.AddComponent<RectTransform>();
-        ltRect.anchorMin = Vector2.zero;
-        ltRect.anchorMax = Vector2.one;
-        //ltRect.anchoredPosition = new Vector2(32, 0);
-        ltRect.sizeDelta = Vector2.zero;
-        var ltMesh = labelText.AddComponent<SuperTextMesh>();
-        ltMesh.size = 70;
-        ltMesh.text = name;
-        ltMesh.anchor = TextAnchor.MiddleLeft;
-        ltMesh.textMaterial = Plugin.AssetManager.UIShadow;
+        var labelText = new Text(name, labelHolder);
+        labelText.textRect.anchoredPosition = Vector2.zero;
 
         return new Inputbox(name, parent)
         {
@@ -66,15 +55,15 @@ public class ConnectionUI
             var buttonSprite = topButton.GetComponent<Image>().sprite;
             
             var hostInput = CreateInput("Hostname:Port", connectionGroup);
-            hostInput.SetText(Plugin.State.Uri);
+            hostInput.Text = Plugin.State.Uri;
             hostInput.onDeselect = text => Plugin.State.Uri = text;
             var slotInput = CreateInput("Player Name", connectionGroup);
-            slotInput.SetText(Plugin.State.SlotName);
+            slotInput.Text = Plugin.State.SlotName;
             slotInput.onDeselect = text => Plugin.State.SlotName = text;
-            slotInput.textRect.anchoredPosition = new Vector2(32, -10);
-            slotInput.overrideFont = Plugin.AssetManager.NaikaiFont;
+            slotInput.textObj.textRect.anchoredPosition = new Vector2(32, -10);
+            slotInput.textObj.overrideFont = Plugin.AssetManager.NaikaiFont;
             var passwordInput = CreateInput("Password", connectionGroup);
-            passwordInput.SetText(Plugin.State.Password);
+            passwordInput.Text = Plugin.State.Password;
             passwordInput.onDeselect = text => Plugin.State.Password = text;
             passwordInput.password = true;
 
@@ -85,7 +74,7 @@ public class ConnectionUI
             spacerElem.preferredHeight = 60;
             
             ConnectButton = new Button("Connect", connectionGroup);
-            ConnectButton.button.onClick.AddListener((UnityAction)ToggleConnection);
+            ConnectButton.AddOnClick(ToggleConnection);
         }
     }
 
@@ -104,12 +93,12 @@ public class ConnectionUI
         var continueButton = __instance.mainGrid.gameObject.transform.GetChild(0).GetChild(0).GetChild(0).GetComponent<SuperTextMesh>();
         if (Plugin.Client.Connected)
         {
-            ConnectButton.text.text = "Disconnect";
+            ConnectButton.text.textMesh.text = "Disconnect";
             continueButton.text = "<w=sassy>Start";
         }
         else
         {
-            ConnectButton.text.text = "Connect";
+            ConnectButton.text.textMesh.text = "Connect";
             continueButton.text = "Connect & Start";
             if (SaveFileManager.GetRootFolder() != "Save")
             {

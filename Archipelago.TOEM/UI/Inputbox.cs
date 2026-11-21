@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using HarmonyLib;
 using UnityEngine;
 using UnityEngine.UI;
@@ -14,17 +15,26 @@ public class Inputbox
 
     public GameObject gameObject;
     public RectTransform holderRect;
+    public LayoutElement holderElem;
+    public Image bgImage;
     public UiButton button;
-    public SuperTextMesh textMesh;
-    public RectTransform textRect;
+    public Text textObj;
     public RectTransform caretRect;
 
-    public Font overrideFont = null;
     public bool password = false;
     public Func<bool> selectable = () => true;
     public Action<string> onDeselect = text => {};
+    public Action onUp = () => {};
+    public Action onDown = () => {};
+    public Action onEnter = () => {};
+    public string Text
+    {
+        get { return text; }
+        set { SetText(value); }
+    }
 
     private string text = "";
+    private bool small = false;
     private int caretIndex = -1;
     private float caretToggleTime = float.MaxValue;
     private KeyCode heldKey = KeyCode.None;
@@ -32,37 +42,25 @@ public class Inputbox
 
     public bool IsActive => gameObject != null && gameObject.activeInHierarchy;
     
-    public Inputbox(string name, GameObject parent)
+    public Inputbox(string name, GameObject parent, bool small = false)
     {
         gameObject = new GameObject(name + " Input");
         gameObject.transform.SetParent(parent.transform, false);
         holderRect = gameObject.AddComponent<RectTransform>();
         holderRect.pivot = Vector2.zero;
-        var ihElem = gameObject.AddComponent<LayoutElement>();
-        ihElem.preferredHeight = 120;
-        var ihImage = gameObject.AddComponent<Image>();
-        ihImage.color = new Color(0, 0, 0, 0.2901961f);
-        ihImage.type = Image.Type.Sliced;
-        ihImage.sprite = Sprite.Create(Plugin.AssetManager.ScrollBox, new Rect(318, 350, 60, 64), 
+        holderElem = gameObject.AddComponent<LayoutElement>();
+        bgImage = gameObject.AddComponent<Image>();
+        bgImage.color = new Color(0, 0, 0, 0.2901961f);
+        bgImage.type = Image.Type.Sliced;
+        bgImage.sprite = Sprite.Create(Plugin.AssetManager.ScrollBox, new Rect(318, 350, 60, 64), 
             Vector2.zero, 100, 0, SpriteMeshType.Tight, new Vector4(29, 33, 29, 29));
         button = gameObject.AddComponent<UiButton>();
         button.HasClickSound = false;
         button.animateButton = false;
 
-        var inputText = new GameObject("InputText");
-        inputText.transform.SetParent(gameObject.transform, false);
-        textRect = inputText.AddComponent<RectTransform>();
-        textRect.anchorMin = Vector2.zero;
-        textRect.anchorMax = Vector2.one;
-        textRect.anchoredPosition = new Vector2(32, 0);
-        textRect.pivot = Vector2.zero;
-        textRect.sizeDelta = Vector2.zero;
-        textMesh = inputText.AddComponent<SuperTextMesh>();
-        textMesh.size = 70;
-        textMesh.text = "";
-        textMesh.anchor = TextAnchor.MiddleLeft;
-        textMesh.textMaterial = Plugin.AssetManager.UIShadow;
-        textMesh.ColorDeselect();
+        textObj = new(name, gameObject);
+        textObj.textMesh.text = "";
+        textObj.textMesh.ColorDeselect();
 
         var caret = new GameObject("Caret");
         caret.transform.SetParent(gameObject.transform, false);
@@ -71,9 +69,25 @@ public class Inputbox
         caretRect.anchorMax = Vector2.zero;
         caretRect.anchoredPosition = Vector2.zero;
         caretRect.pivot = Vector2.zero;
-        caretRect.sizeDelta = new Vector2(2, 70);
         caret.AddComponent<Image>();
         caret.active = false;
+
+        if (small)
+        {
+            this.small = true;
+            holderElem.preferredHeight = 43;
+            holderElem.minHeight = 43;
+            textObj.textRect.anchoredPosition = new Vector2(10, -5);
+            textObj.textMesh.size = 30;
+            textObj.textMesh.textMaterial = Plugin.AssetManager.UIDefault;
+            textObj.overrideFont = Plugin.AssetManager.NaikaiFont;
+            caretRect.sizeDelta = new Vector2(1, 30);
+        }
+        else
+        {
+            holderElem.preferredHeight = 120;
+            caretRect.sizeDelta = new Vector2(2, 70);
+        }
 
         Instances.Add(this);
     }
@@ -81,7 +95,9 @@ public class Inputbox
     public void SetText(string textString)
     {
         text = textString;
-        textMesh.text = password? new string('*', text.Length): text;
+        if (caretIndex > text.Length - 1)
+            SetCursorLast();
+        textObj.textMesh.text = password? new string('*', text.Length): text;
     }
     
     public void FindClosesCaretIndex(Vector2 point)
@@ -90,15 +106,15 @@ public class Inputbox
         float bestDistance = float.MaxValue;
         caretIndex = -1;
         int testCaretIndex = 0;
-        for (int i = 0; i < textMesh.info.Count; i++)
+        for (int i = 0; i < textObj.textMesh.info.Count; i++)
         {
-            if (textMesh.info[i].chGlyphIndex < 0)
+            if (textObj.textMesh.info[i].chGlyphIndex < 0)
                 continue;
             Vector2 charPos = Vector2.zero;
             for (int j = 0; j < 4; j++)
-                charPos += (Vector2)textMesh.endVerts[i*4+j];
+                charPos += (Vector2)textObj.textMesh.endVerts[i*4+j];
             charPos /= 4;
-            Vector2 worldPos = (Vector2)uiCam.WorldToScreenPoint(textRect.TransformPoint(charPos));
+            Vector2 worldPos = (Vector2)uiCam.WorldToScreenPoint(textObj.textRect.TransformPoint(charPos));
             float dist = (point - worldPos).sqrMagnitude;
             if(dist < bestDistance)
             {
@@ -117,40 +133,49 @@ public class Inputbox
         int testCaretIndex = 0;
         if (caretIndex >= 0)
         {
-            for (stmIndex = 0; stmIndex < textMesh.info.Count; stmIndex++)
+            for (stmIndex = 0; stmIndex < textObj.textMesh.info.Count; stmIndex++)
             {
-                if (textMesh.info[stmIndex].chGlyphIndex < 0)
+                if (textObj.textMesh.info[stmIndex].chGlyphIndex < 0)
                     continue;
                 if (testCaretIndex == caretIndex)
                     break;
                 testCaretIndex++;
             }
         }
-        float caretX = 32;
+        float caretX = textObj.textRect.anchoredPosition.x;
         if (stmIndex >= 0)
-            caretX += textMesh.endVerts[stmIndex*4+1].x;
-        float caretY = 26;
-        if (textMesh.lineBreaks.Count > 1)
+            caretX += textObj.textMesh.endVerts[stmIndex*4+1].x;
+        float caretY = small? 6: 26;
+        if (textObj.textMesh.lineBreaks.Count > 1)
         {
             int line = 0;
-            foreach (int lineBreak in textMesh.lineBreaks)
+            foreach (int lineBreak in textObj.textMesh.lineBreaks)
                 if (stmIndex > lineBreak)
                     line++;
-            caretY = 51 - 70 * line;
+            caretY = small? 12 - 30 * line: 51 - 70 * line;
         }
 
         caretRect.anchoredPosition = new Vector2(caretX, caretY);
     }
-    
-    public static bool RectContainsPoint(RectTransform rect, Vector2 point)
+
+    public void SetCursorLast()
     {
-        var uiCam = UiButtonSystem.Instance.uiCam;
-        var posMin = uiCam.WorldToScreenPoint(rect.TransformPoint(rect.rect.min));
-        var posMax = uiCam.WorldToScreenPoint(rect.TransformPoint(rect.rect.max));
-        return point.x >= (int)posMin.x && point.x < (int)posMax.x &&
-               point.y >= (int)posMin.y && point.y < (int)posMax.y;
+        caretIndex = text.Length - 1;
+        UpdateCaretPos();
     }
 
+    public void Select()
+    {
+        SelectedInput = null;
+        UiButtonSystem.Instance.ForceSetTargetButton(button);
+        SelectedInput = this;
+
+        caretRect.gameObject.active = true;
+        caretToggleTime = Time.time + 0.5f;
+        textObj.textMesh.ColorSelect();
+        SetCursorLast();
+    }
+    
     public static void UpdateAll()
     {
         // Clear stale selected input
@@ -165,34 +190,28 @@ public class Inputbox
         // Check if an Input field was clicked
         if (Input.GetMouseButtonDown(0))
         {
-            bool new_selection = false;
+            bool newSelection = false;
             Inputbox oldSelectedInput = SelectedInput;
             foreach (var instance in Instances)
             {
                 if (!instance.IsActive)
                     continue;
 
-                if (RectContainsPoint(instance.holderRect, Input.mousePosition) && !Plugin.Client.Connected)
+                if (UiButtonSystem.hoverButton == instance.button && instance.selectable())
                 {
-                    new_selection = true;
-                    SelectedInput = null;
-                    UiButtonSystem.Instance.ForceSetTargetButton(instance.button);
-                    SelectedInput = instance;
-                    
+                    newSelection = true;
+                    instance.Select();
                     instance.FindClosesCaretIndex(Input.mousePosition);
-                    instance.caretRect.gameObject.active = true;
-                    instance.caretToggleTime = Time.time + 0.5f;
-                    instance.textMesh.ColorSelect();
                 }
                 else
                 {
                     if (oldSelectedInput == instance)
                         instance.onDeselect(instance.text);
                     instance.caretRect.gameObject.active = false;
-                    instance.textMesh.ColorDeselect();
+                    instance.textObj.textMesh.ColorDeselect();
                 }
             }
-            if(!new_selection && SelectedInput != null)
+            if(!newSelection && SelectedInput != null)
             {
                 SelectedInput = null;
                 UiButtonSystem.Instance.SetTargetButton(null);
@@ -270,6 +289,13 @@ public class Inputbox
         {
             caretIndex++;
         }
+        
+        if (Input.GetKeyDown(KeyCode.UpArrow))
+            onUp();
+        if (Input.GetKeyDown(KeyCode.DownArrow))
+            onDown();
+        if (Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter))
+            onEnter();
 
         bool ctrlHeld = Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl);
         if (ctrlHeld && Input.GetKeyDown(KeyCode.V))
@@ -295,31 +321,5 @@ public class Inputbox
     public static bool SetTargetButton()
     {
         return SelectedInput == null || !SelectedInput.IsActive;
-    }
-
-    [HarmonyPrefix, HarmonyPatch(typeof(SuperTextMesh), nameof(SuperTextMesh.Rebuild), [typeof(float), typeof(bool), typeof(bool)])]
-    public static void Rebuild(SuperTextMesh __instance)
-    {
-        foreach (var instance in Instances)
-        {
-            if (instance.textMesh == __instance && instance.overrideFont)
-            {
-                SuperTextMesh.font = instance.overrideFont;
-                break;
-            }
-        }
-    }
-
-    [HarmonyPostfix, HarmonyPatch(typeof(SuperTextMesh), nameof(SuperTextMesh.Rebuild), [typeof(float), typeof(bool), typeof(bool)])]
-    public static void Rebuild_Postfix(SuperTextMesh __instance)
-    {
-        foreach (var instance in Instances)
-        {
-            if (instance.textMesh == __instance && instance.overrideFont)
-            {
-                SuperTextMesh.font = __instance.data.defaultFont;
-                break;
-            }
-        }
     }
 }

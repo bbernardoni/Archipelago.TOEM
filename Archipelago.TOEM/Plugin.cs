@@ -1,5 +1,4 @@
 ﻿using System.Reflection;
-using Archipelago.TOEM.Client;
 using Archipelago.TOEM.UI;
 using BepInEx;
 using BepInEx.Configuration;
@@ -16,7 +15,7 @@ public class Plugin : BasePlugin
     public const string MinimumVersion = "2.2.0";
 
     public static ManualLogSource Logger { get; private set; }
-    public static Client.Client Client { get; private set; }
+    public static Client Client { get; private set; }
     public static State State { get; set; }
     public static SlotOptions Options => State.SlotData.Options;
 
@@ -65,7 +64,6 @@ public class Plugin : BasePlugin
         ItemManager = new();
         LocationManager = new();
         SceneManager = new();
-        ClientConsole.Initialize();
         UIManager.Init();
 
         Logger.LogInfo($"Plugin {MyPluginInfo.PLUGIN_GUID} v{MyPluginInfo.PLUGIN_VERSION} is loaded!");

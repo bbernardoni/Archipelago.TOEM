@@ -9,7 +9,7 @@ using Archipelago.MultiClient.Net.Helpers;
 using Archipelago.MultiClient.Net.MessageLog.Messages;
 using Archipelago.MultiClient.Net.Models;
 
-namespace Archipelago.TOEM.Client;
+namespace Archipelago.TOEM;
 
 public class Client
 {
@@ -87,14 +87,14 @@ public class Client
             _attemptingConnection = false;
             string failureMessage = "AP connection failed: " + string.Join("\n", loginFailure.Errors);
             Plugin.Logger.LogError(failureMessage);
-            ClientConsole.LogMessage(failureMessage);
+            UI.ConsoleUI.LogMessage(failureMessage);
             _session = null;
             return;
         }
 
         string connectMessage = $"Successfully connected to {Plugin.State.Uri} as {Plugin.State.SlotName}";
         Plugin.Logger.LogInfo(connectMessage);
-        ClientConsole.LogMessage(connectMessage);
+        UI.ConsoleUI.LogMessage(connectMessage);
         OnConnect();
     }
 
@@ -122,7 +122,7 @@ public class Client
         if(invalidVersionMessage != "")
         {
             Plugin.Logger.LogError(invalidVersionMessage);
-            ClientConsole.LogMessage(invalidVersionMessage);
+            UI.ConsoleUI.LogMessage(invalidVersionMessage);
             Disconnect();
             return;
         }
@@ -144,7 +144,7 @@ public class Client
 
         string disconnectMessage = "Disconnecting from server.";
         Plugin.Logger.LogInfo(disconnectMessage);
-        ClientConsole.LogMessage(disconnectMessage);
+        UI.ConsoleUI.LogMessage(disconnectMessage);
 
         _attemptingConnection = false;
         Task.Run(() => { _session.Socket.DisconnectAsync(); }).Wait();
@@ -157,7 +157,7 @@ public class Client
         if (reason != "")
             disconnectMessage += ": " + reason;
         Plugin.Logger.LogInfo(disconnectMessage);
-        ClientConsole.LogMessage(disconnectMessage);
+        UI.ConsoleUI.LogMessage(disconnectMessage);
         _attemptingConnection = false;
         _session = null;
     }
@@ -174,7 +174,7 @@ public class Client
     public static void Session_OnMessageReceived(LogMessage message)
     {
         Plugin.Logger.LogMessage(message);
-        ClientConsole.LogMessage(message.ToString());
+        UI.ConsoleUI.LogMessage(message.ToString());
     }
 
     public void SendLocation(long location)

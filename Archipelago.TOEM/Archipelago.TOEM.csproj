@@ -72,9 +72,6 @@
     <Reference Include="SimpleJSON">
       <HintPath>lib/SimpleJSON.dll</HintPath>
     </Reference>
-    <Reference Include="UniverseLib">
-      <HintPath>lib/UniverseLib.BIE.IL2CPP.Interop.dll</HintPath>
-    </Reference>
     <Reference Include="FMODUnity">
       <HintPath>lib/FMODUnity.dll</HintPath>
     </Reference>

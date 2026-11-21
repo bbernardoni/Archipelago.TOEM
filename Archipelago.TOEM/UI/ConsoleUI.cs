@@ -5,7 +5,6 @@ using System.Linq;
 using UnityEngine;
 using UnityEngine.UI;
 using HarmonyLib;
-using FMOD;
 
 namespace Archipelago.TOEM.UI;
 

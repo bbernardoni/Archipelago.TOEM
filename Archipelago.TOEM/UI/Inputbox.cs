@@ -343,7 +343,7 @@ public class Inputbox
         else if (textX + endVerts[^2].x < caretXMax)
         {
             textX = caretXMax - endVerts[^2].x;
-            textObj.textRect.anchoredPosition = new Vector2(leftPadding, textObj.textRect.anchoredPosition.y);
+            textObj.textRect.anchoredPosition = new Vector2(textX, textObj.textRect.anchoredPosition.y);
             UpdateCaretPos();
         }
 

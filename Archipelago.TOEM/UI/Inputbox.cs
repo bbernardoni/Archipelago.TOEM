@@ -34,11 +34,12 @@ public class Inputbox
     }
 
     private string text = "";
-    private bool small = false;
     private int caretIndex = -1;
     private float caretToggleTime = float.MaxValue;
     private KeyCode heldKey = KeyCode.None;
     private float heldRepeatTime = float.MaxValue;
+    private readonly float leftPadding;
+    private readonly float rightPadding;
 
     public bool IsActive => gameObject != null && gameObject.activeInHierarchy;
     
@@ -57,9 +58,11 @@ public class Inputbox
         button = gameObject.AddComponent<UiButton>();
         button.HasClickSound = false;
         button.animateButton = false;
+        gameObject.AddComponent<Mask>();
 
         textObj = new(name, gameObject);
         textObj.textMesh.text = "";
+        textObj.textMesh.uiWrap = false;
         textObj.textMesh.ColorDeselect();
 
         var caret = new GameObject("Caret");
@@ -67,14 +70,14 @@ public class Inputbox
         caretRect = caret.AddComponent<RectTransform>();
         caretRect.anchorMin = Vector2.zero;
         caretRect.anchorMax = Vector2.zero;
-        caretRect.anchoredPosition = Vector2.zero;
         caretRect.pivot = Vector2.zero;
         caret.AddComponent<Image>();
         caret.active = false;
 
         if (small)
         {
-            this.small = true;
+            leftPadding = 10;
+            rightPadding = 10;
             holderElem.preferredHeight = 43;
             holderElem.minHeight = 43;
             button.hoverType = UiButtonSystem.HoverType.None;
@@ -82,11 +85,15 @@ public class Inputbox
             textObj.textMesh.size = 30;
             textObj.textMesh.textMaterial = Plugin.AssetManager.UIDefault;
             textObj.overrideFont = Plugin.AssetManager.NaikaiFont;
+            caretRect.anchoredPosition3D = new Vector3(0, 6, 1);
             caretRect.sizeDelta = new Vector2(1, 30);
         }
         else
         {
+            leftPadding = 32;
+            rightPadding = 16;
             holderElem.preferredHeight = 120;
+            caretRect.anchoredPosition3D = new Vector3(0, 26, 1);
             caretRect.sizeDelta = new Vector2(2, 70);
         }
 
@@ -146,17 +153,7 @@ public class Inputbox
         float caretX = textObj.textRect.anchoredPosition.x;
         if (stmIndex >= 0)
             caretX += textObj.textMesh.endVerts[stmIndex*4+1].x;
-        float caretY = small? 6: 26;
-        if (textObj.textMesh.lineBreaks.Count > 1)
-        {
-            int line = 0;
-            foreach (int lineBreak in textObj.textMesh.lineBreaks)
-                if (stmIndex > lineBreak)
-                    line++;
-            caretY = small? 12 - 30 * line: 51 - 70 * line;
-        }
-
-        caretRect.anchoredPosition = new Vector2(caretX, caretY);
+        caretRect.anchoredPosition = new Vector2(caretX, caretRect.anchoredPosition.y);
     }
 
     public void SetCursorLast()
@@ -236,6 +233,11 @@ public class Inputbox
         float time = Time.time;
         var inspectMenu = MenuManager.Instance.menu_PhotoInspectDelete.gameObject.GetComponent<Photographing.PictureInspectUI>();
 
+        if (Input.GetMouseButton(0))
+        {
+            FindClosesCaretIndex(Input.mousePosition);
+        }
+
         // Handle printable characters (and backspace)
         foreach (char c in Input.inputString)
         {
@@ -310,6 +312,7 @@ public class Inputbox
         if (ctrlHeld && Input.GetKeyDown(KeyCode.V))
         {
             string clipboard = GUIUtility.systemCopyBuffer;
+            clipboard = clipboard.Replace("\n", "").Replace("\r", "");
             text = text.Insert(caretIndex+1, clipboard);
             caretIndex += clipboard.Length;
             inspectMenu.onLetterAddedSound.PlaySound();
@@ -317,6 +320,32 @@ public class Inputbox
         
         SetText(text);
         UpdateCaretPos();
+        float caretXMax = holderRect.sizeDelta.x - rightPadding;
+        float textX = textObj.textRect.anchoredPosition.x;
+        if (caretRect.anchoredPosition.x > caretXMax)
+        {
+            textX -= caretRect.anchoredPosition.x - caretXMax;
+            textObj.textRect.anchoredPosition = new Vector2(textX, textObj.textRect.anchoredPosition.y);
+            caretRect.anchoredPosition = new Vector2(caretXMax, caretRect.anchoredPosition.y);
+        }
+        if (caretRect.anchoredPosition.x < leftPadding)
+        {
+            textX += leftPadding - caretRect.anchoredPosition.x;
+            textObj.textRect.anchoredPosition = new Vector2(textX, textObj.textRect.anchoredPosition.y);
+            caretRect.anchoredPosition = new Vector2(leftPadding, caretRect.anchoredPosition.y);
+        }
+        var endVerts = textObj.textMesh.endVerts;
+        if (endVerts.Count == 0 || leftPadding + endVerts[^2].x <= caretXMax)
+        {
+            textObj.textRect.anchoredPosition = new Vector2(leftPadding, textObj.textRect.anchoredPosition.y);
+            UpdateCaretPos();
+        }
+        else if (textX + endVerts[^2].x < caretXMax)
+        {
+            textX = caretXMax - endVerts[^2].x;
+            textObj.textRect.anchoredPosition = new Vector2(leftPadding, textObj.textRect.anchoredPosition.y);
+            UpdateCaretPos();
+        }
 
         // Caret blink
         if (time > caretToggleTime)

@@ -204,6 +204,12 @@ public class Inputbox
 
     public void Select()
     {
+        SelectNoCursor();
+        SetCursorLast(true);
+    }
+
+    public void SelectNoCursor()
+    {
         if (SelectedInput != null && SelectedInput != this)
             SelectedInput.Deselect();
 
@@ -214,7 +220,6 @@ public class Inputbox
         caretRect.gameObject.active = true;
         caretToggleTime = Time.time + 0.5f;
         textObj.textMesh.ColorSelect();
-        SetCursorLast();
     }
 
     private void DeleteSelection()
@@ -252,7 +257,7 @@ public class Inputbox
                 {
                     newSelection = true;
                     bool sameInput = SelectedInput == instance;
-                    instance.Select();
+                    instance.SelectNoCursor();
                     instance.FindClosesCaretIndex(Input.mousePosition);
                     if (!sameInput || !(Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift)))
                         instance.selectStartIndex = instance.caretIndex;

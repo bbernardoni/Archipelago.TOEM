@@ -19,7 +19,7 @@ public class Plugin : BasePlugin
     public static State State { get; set; }
     public static SlotOptions Options => State.SlotData.Options;
 
-    public static UI.AssetManager AssetManager { get; set; }
+    public static AssetManager AssetManager { get; set; }
     public static SaveFileManager SaveFileManager { get; set; }
     public static ItemManager ItemManager { get; set; }
     public static LocationManager LocationManager { get; set; }
@@ -28,8 +28,6 @@ public class Plugin : BasePlugin
     private static ConfigEntry<string> _configUri;
     private static ConfigEntry<string> _configSlotName;
     private static ConfigEntry<string> _configPassword;
-    private static ConfigEntry<bool> _configShowConnection;
-    private static ConfigEntry<bool> _configShowConsole;
 
     public override void Load()
     {
@@ -41,17 +39,11 @@ public class Plugin : BasePlugin
         _configSlotName = Config.Bind("Archipelago", "slotName", "Player1", "The slot name of the player you are connecting as");
         _configPassword = Config.Bind("Archipelago", "password", "", "The password for the player you are connecting as");
 
-        _configShowConnection = Config.Bind("UI", "showConnection", true, "Show or hide the AP connection info when connected");
-        _configShowConsole = Config.Bind("UI", "showConsole", true, "Show or hide the AP message console at the top of the screen");
-
         if (!configEnabled.Value)
         {
             Logger.LogWarning("Archipelago disabled");
             return;
         }
-
-        Settings.ShowConnection = _configShowConnection.Value;
-        Settings.ShowConsole = _configShowConsole.Value;
 
         var harmony = new Harmony(MyPluginInfo.PLUGIN_GUID);
         harmony.PatchAll(Assembly.GetExecutingAssembly());
@@ -82,19 +74,5 @@ public class Plugin : BasePlugin
         _configSlotName.Value = slotName;
         _configPassword.Value = password;
         UpdateConnectionInfo();
-    }
-
-    public static void ToggleConnection()
-    {
-        var enabled = !Settings.ShowConnection;
-        _configShowConnection.Value = enabled;
-        Settings.ShowConnection = enabled;
-    }
-
-    public static void ToggleConsole()
-    {
-        var enabled = !Settings.ShowConsole;
-        _configShowConsole.Value = enabled;
-        Settings.ShowConsole = enabled;
     }
 }

@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using Archipelago.MultiClient.Net.Enums;
+using Archipelago.TOEM.UI;
 using HarmonyLib;
 using Photographing;
 using Quests;
@@ -191,20 +193,20 @@ public class ItemManager
             return true;
         
         var itemInfo = Plugin.State.ScoutedLocations[(long)apLocation];
-        string color = "00EEEE";
-        if ((itemInfo.Flags & MultiClient.Net.Enums.ItemFlags.Trap) != 0)
-            color = "FA8072";
-        else if ((itemInfo.Flags & MultiClient.Net.Enums.ItemFlags.Advancement) != 0)
+        string color = STMPalette.Cyan;
+        if ((itemInfo.Flags & ItemFlags.Trap) != 0)
+            color = STMPalette.Salmon;
+        else if ((itemInfo.Flags & ItemFlags.Advancement) != 0)
         {
-            if ((itemInfo.Flags & MultiClient.Net.Enums.ItemFlags.NeverExclude) != 0)
-                color = "rainbow";
+            if ((itemInfo.Flags & ItemFlags.NeverExclude) != 0)
+                color = STMPalette.Rainbow;
             else
-                color = "AF99EF";
+                color = STMPalette.Plum;
         }
-        else if ((itemInfo.Flags & MultiClient.Net.Enums.ItemFlags.NeverExclude) != 0)
-            color = "6D8BE8";
+        else if ((itemInfo.Flags & ItemFlags.NeverExclude) != 0)
+            color = STMPalette.SlateBlue;
 
-        __instance.itemNameText.text = $"<w=sassy><c={color}>{itemInfo.Name}";
+        __instance.itemNameText.text = $"<w=sassy>{color}{itemInfo.Name}";
         string foundFor = itemInfo.IsLocal? "Your Item": $"Item for {itemInfo.PlayerName}";
         __instance.itemDescriptionText.text = $"<w=sassy>Found {foundFor} at {pickedUpItem.ToString()}";
         __instance.itemCountText.enabled = false;

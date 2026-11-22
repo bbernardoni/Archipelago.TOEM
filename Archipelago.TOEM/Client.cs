@@ -7,7 +7,9 @@ using Archipelago.MultiClient.Net;
 using Archipelago.MultiClient.Net.Enums;
 using Archipelago.MultiClient.Net.Helpers;
 using Archipelago.MultiClient.Net.MessageLog.Messages;
+using Archipelago.MultiClient.Net.MessageLog.Parts;
 using Archipelago.MultiClient.Net.Models;
+using Archipelago.TOEM.UI;
 
 namespace Archipelago.TOEM;
 
@@ -174,7 +176,18 @@ public class Client
     public static void Session_OnMessageReceived(LogMessage message)
     {
         Plugin.Logger.LogMessage(message);
-        UI.ConsoleUI.LogMessage(message.ToString());
+        ItemFlags progUseful = ItemFlags.Advancement | ItemFlags.NeverExclude;
+        string colorfulMessage = "";
+        foreach (var messagePart in message.Parts)
+        {
+            if (messagePart.PaletteColor == null || messagePart.IsBackgroundColor)
+                colorfulMessage += messagePart.Text;
+            else if (messagePart is ItemMessagePart itemMessagePart && (itemMessagePart.Flags & progUseful) == progUseful)
+                colorfulMessage += STMPalette.Rainbow + messagePart.Text + STMPalette.End;
+            else
+                colorfulMessage += messagePart.GetColor(STMPalette.Default) + messagePart.Text + STMPalette.End;
+        }
+        ConsoleUI.LogMessage(colorfulMessage);
     }
 
     public void SendLocation(long location)

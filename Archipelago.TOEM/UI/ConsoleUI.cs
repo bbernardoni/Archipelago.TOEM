@@ -15,7 +15,7 @@ public class ConsoleUI
 
     private static readonly List<string> LogLines = [];
     private static float LastUpdateTime = -HideTimeout;
-    private static bool UpdatedLogLines = false;
+    private static int UpdatedLogLines = 0;
     private static readonly List<string> CommandHist = [];
     private static int CommandHistIndex = 0;
     private const int MaxLogLines = 80;
@@ -56,7 +56,7 @@ public class ConsoleUI
             var fgElem = fullGroup.AddComponent<LayoutElement>();
             fgElem.flexibleWidth = 9999;
             var svgImage = fullGroup.AddComponent<Image>();
-            svgImage.color = new Color(0, 0, 0, 0.2901961f);
+            svgImage.color = new Color(0, 0, 0, 0.5f);
             svgImage.type = Image.Type.Sliced;
             svgImage.sprite = Sprite.Create(Plugin.AssetManager.ScrollBox, new Rect(318, 350, 60, 64), 
                 Vector2.zero, 100, 0, SpriteMeshType.Tight, new Vector4(29, 33, 29, 29));
@@ -166,22 +166,24 @@ public class ConsoleUI
             sgElem.minHeight = 43;
             sgElem.flexibleWidth = 9999;
             var sgImage = shortGroup.AddComponent<Image>();
-            sgImage.color = new Color(0, 0, 0, 0.2901961f);
+            sgImage.color = new Color(0, 0, 0, 0.5f);
             sgImage.type = Image.Type.Sliced;
             sgImage.sprite = Sprite.Create(Plugin.AssetManager.ScrollBox, new Rect(318, 350, 60, 64), 
                 Vector2.zero, 100, 0, SpriteMeshType.Tight, new Vector4(29, 33, 29, 29));
             shortGroup.AddComponent<Mask>();
             shortText = new("", shortGroup);
-            shortText.textRect.anchoredPosition = new Vector2(10, -10);
+            shortText.textRect.anchoredPosition = new Vector2(10, -11);
+            shortText.textRect.pivot = new Vector2(0, 1);
+            shortText.textRect.sizeDelta = new Vector2(-15, -7);
             shortText.textMesh.size = 30;
             shortText.textMesh.textMaterial = Plugin.AssetManager.UIDefault;
             shortText.textMesh.anchor = TextAnchor.UpperLeft;
-            shortText.textMesh.uiWrap = false;
             shortText.overrideFont = Plugin.AssetManager.NaikaiFont;
             shortGroup.SetActive(false);
 
             // Show button
             showButton = new Button("Show", apConsoleGroup, true);
+            showButton.bgImage.color = new Color(0, 0, 0, 0.5f);
             showButton.AddOnClick(ToggleConsole);
         }
     }
@@ -190,6 +192,8 @@ public class ConsoleUI
     {
         Hidden = !Hidden;
         showButton.text.textMesh.text = Hidden ? "Show" : "Hide";
+        if (!Hidden)
+            UpdatedLogLines = 2;
     }
 
     public static void SendCommand()
@@ -317,13 +321,7 @@ public class ConsoleUI
 
         LogLines.Add(message);
         LastUpdateTime = Time.time;
-        UpdatedLogLines = true;
-    }
-    
-    public static bool RectContainsPoint(RectTransform rect, Vector2 point)
-    {
-        return point.x >= rect.position.x && point.x <= (rect.position.x + rect.rect.width) &&
-               point.y <= rect.position.y && point.y >= (rect.position.y - rect.rect.height);
+        UpdatedLogLines = 2;
     }
 
     public static void Update()
@@ -349,6 +347,20 @@ public class ConsoleUI
         if (LogLines.Count > 0)
         {
             shortText.textMesh.text = LogLines[^1];
+            var sgElem = shortGroup.GetComponent<LayoutElement>();
+            if (shortText.textMesh.lineBreaks.Count > 1)
+            {
+                sgElem.preferredHeight = 63;
+                sgElem.minHeight = 63;
+                shortText.textRect.anchoredPosition = new Vector2(10, -5);
+            }
+            else
+            {
+                sgElem.preferredHeight = 43;
+                sgElem.minHeight = 43;
+                shortText.textRect.anchoredPosition = new Vector2(10, -11);
+            }
+
             string scrollString = "";
             for (var i = 0; i < LogLines.Count; i++)
             {
@@ -369,10 +381,12 @@ public class ConsoleUI
 
     public static void LateUpdate()
     {
-        if (UpdatedLogLines)
+        if (UpdatedLogLines > 0)
         {
-            UpdatedLogLines = false;
-            scrollViewGroup.GetComponent<ScrollRect>().SetVerticalNormalizedPosition(0f);
+            UpdatedLogLines--;
+            var scrollRect = scrollViewGroup.GetComponent<ScrollRect>();
+            if (scrollRect.vScrollingNeeded)
+                scrollRect.SetVerticalNormalizedPosition(0f);
         }
     }
 }

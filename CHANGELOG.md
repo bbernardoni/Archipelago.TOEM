@@ -117,14 +117,17 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [2.2.0] - 2026-
 
-- Note: only tested on the Steam release. I think it should work for the Epic and GoG versions but there might be some weirdness with the new save system. If you test one of these versions, let me know if it works or not.
+- NOTE: New install instructions. One dll now
+- NOTE: only tested on the Steam release. I think it should work for the Epic and GoG versions but there might be some weirdness with the new save system. If you test one of these versions, let me know if it works or not.
 - Overhauled save system
     - Vanilla save is now left untouched
     - A new save is made for each seed allowing for playing multiple concurrent worlds
     - New options menu to view / delete AP saves
-- Implemented new native looking UI for connecting
+- Implemented new native looking UI for connecting and AP console
+    - AP console now displays colored text
 - Reworked item get screen to show the actual item or ap logo as well as colored text based on classification
 - Added new "Force basto gate open" option which removes the requirement of the water popper attachment for exploring Basto
+- Reworked ER behavior to avoid early BKs in a new region due to missing item
 - Revamped docs
 - Bugfix: Sandwich location missing honk requirement
 - Bugfix: Broken dreams bad OOL rule

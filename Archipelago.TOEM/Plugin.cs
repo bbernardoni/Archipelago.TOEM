@@ -1,7 +1,6 @@
 ﻿using System.Reflection;
 using Archipelago.TOEM.UI;
 using BepInEx;
-using BepInEx.Configuration;
 using BepInEx.Logging;
 using BepInEx.Unity.IL2CPP;
 using HarmonyLib;
@@ -25,21 +24,11 @@ public class Plugin : BasePlugin
     public static LocationManager LocationManager { get; set; }
     public static SceneManager SceneManager { get; set; }
 
-    private static ConfigEntry<string> _configUri;
-    private static ConfigEntry<string> _configSlotName;
-    private static ConfigEntry<string> _configPassword;
-
     public override void Load()
     {
         Logger = Log;
 
-        var configEnabled = Config.Bind("Archipelago", "enabled", true, "Enable or disable the mod as a whole");
-
-        _configUri = Config.Bind("Archipelago", "uri", "archipelago.gg:38281", "The address and port of the archipelago server to connect to");
-        _configSlotName = Config.Bind("Archipelago", "slotName", "Player1", "The slot name of the player you are connecting as");
-        _configPassword = Config.Bind("Archipelago", "password", "", "The password for the player you are connecting as");
-
-        if (!configEnabled.Value)
+        if (!ConfigManager.InitConfig(Config))
         {
             Logger.LogWarning("Archipelago disabled");
             return;
@@ -49,7 +38,7 @@ public class Plugin : BasePlugin
         harmony.PatchAll(Assembly.GetExecutingAssembly());
 
         Client = new();
-        State = new(_configUri.Value, _configSlotName.Value, _configPassword.Value);
+        State = new();
 
         AssetManager = new();
         SaveFileManager = new();
@@ -59,20 +48,5 @@ public class Plugin : BasePlugin
         UIManager.Init();
 
         Logger.LogInfo($"Plugin {MyPluginInfo.PLUGIN_GUID} v{MyPluginInfo.PLUGIN_VERSION} is loaded!");
-    }
-
-    public static void UpdateConnectionInfo()
-    {
-        State.Uri = _configUri.Value;
-        State.SlotName = _configSlotName.Value;
-        State.Password = _configPassword.Value;
-    }
-
-    public static void UpdateConnectionInfo(string uri, string slotName, string password)
-    {
-        _configUri.Value = uri;
-        _configSlotName.Value = slotName;
-        _configPassword.Value = password;
-        UpdateConnectionInfo();
     }
 }

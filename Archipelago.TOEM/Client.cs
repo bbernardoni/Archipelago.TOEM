@@ -89,14 +89,14 @@ public class Client
             _attemptingConnection = false;
             string failureMessage = "AP connection failed: " + string.Join("\n", loginFailure.Errors);
             Plugin.Logger.LogError(failureMessage);
-            UI.ConsoleUI.LogMessage(failureMessage);
+            ConsoleUI.LogMessage(failureMessage);
             _session = null;
             return;
         }
 
         string connectMessage = $"Successfully connected to {Plugin.State.Uri} as {Plugin.State.SlotName}";
         Plugin.Logger.LogInfo(connectMessage);
-        UI.ConsoleUI.LogMessage(connectMessage);
+        ConsoleUI.LogMessage(connectMessage);
         OnConnect();
     }
 
@@ -124,7 +124,7 @@ public class Client
         if(invalidVersionMessage != "")
         {
             Plugin.Logger.LogError(invalidVersionMessage);
-            UI.ConsoleUI.LogMessage(invalidVersionMessage);
+            ConsoleUI.LogMessage(invalidVersionMessage);
             Disconnect();
             return;
         }
@@ -132,7 +132,7 @@ public class Client
         Plugin.State.SetupSession(slotData, _session);
         _session.DataStorage[GetDSKey("traversed_entrances")].Initialize(new List<int>());
         Plugin.SaveFileManager.ConnectSave(_shouldStartGame);
-        Plugin.UpdateConnectionInfo(Plugin.State.Uri, Plugin.State.SlotName, Plugin.State.Password);
+        ConfigManager.UpdateConnectionInfo();
         _ignoreLocations = false;
         _attemptingConnection = false;
     }
@@ -146,7 +146,7 @@ public class Client
 
         string disconnectMessage = "Disconnecting from server.";
         Plugin.Logger.LogInfo(disconnectMessage);
-        UI.ConsoleUI.LogMessage(disconnectMessage);
+        ConsoleUI.LogMessage(disconnectMessage);
 
         _attemptingConnection = false;
         Task.Run(() => { _session.Socket.DisconnectAsync(); }).Wait();
@@ -159,7 +159,7 @@ public class Client
         if (reason != "")
             disconnectMessage += ": " + reason;
         Plugin.Logger.LogInfo(disconnectMessage);
-        UI.ConsoleUI.LogMessage(disconnectMessage);
+        ConsoleUI.LogMessage(disconnectMessage);
         _attemptingConnection = false;
         _session = null;
     }

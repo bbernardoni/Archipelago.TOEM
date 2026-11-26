@@ -63,22 +63,9 @@ public class State
 
     public State()
     {
-        Uri = "localhost";
-        SlotName = "Player1";
-    }
-
-    public State(string uri, string slotName, string password)
-    {
-        Uri = uri;
-        SlotName = slotName;
-        Password = password;
-    }
-
-    public void UpdateConnection(string uri, string slotName, string password)
-    {
-        Uri = uri;
-        SlotName = slotName;
-        Password = password;
+        Uri = ConfigManager.ConfigUri.Value;
+        SlotName = ConfigManager.ConfigSlotName.Value;
+        Password = ConfigManager.ConfigPassword.Value;
     }
 
     public void SetupSession(SlotData slotData, in ArchipelagoSession session)

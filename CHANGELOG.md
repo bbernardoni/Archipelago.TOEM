@@ -115,16 +115,17 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - Item and location group updates for regions and item aliases
 - Bugfix: The Rule Builder logic overhaul fixed some logic and ER bugs
 
-## [2.2.0] - 2026-
+## [2.2.0] - 2026-11-27
 
-- NOTE: New install instructions. One dll now
-- NOTE: only tested on the Steam release. I think it should work for the Epic and GoG versions but there might be some weirdness with the new save system. If you test one of these versions, let me know if it works or not.
+- NOTE: New mod install instructions. The mod is now fully contained in one dll file now. The other dlls can now be removed.
+- NOTE: Only tested on the Steam release. I think it should work for the Epic and GoG versions but there might be some weirdness with the new save system. If you test one of these versions, let me know if it works or not.
 - Overhauled save system
     - Vanilla save is now left untouched
     - A new save is made for each seed allowing for playing multiple concurrent worlds
     - New options menu to view / delete AP saves
-- Implemented new native looking UI for connecting and AP console
+- Implemented new native looking UI for connecting, AP Options, and AP console
     - AP console now displays colored text
+- Restored vanilla game cursor behavior with an option to force unlock it again if preferred
 - Reworked item get screen to show the actual item or ap logo as well as colored text based on classification
 - Added new "Force basto gate open" option which removes the requirement of the water popper attachment for exploring Basto
 - Reworked ER behavior to avoid early BKs in a new region due to missing item

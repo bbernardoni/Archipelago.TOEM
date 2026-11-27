@@ -88,7 +88,10 @@
     <Reference Include="I2Localization">
       <HintPath>lib/I2Localization.dll</HintPath>
     </Reference>
-
+    <Reference Include="UniverseLib">
+      <HintPath>lib/UniverseLib.BIE.IL2CPP.Interop.dll</HintPath>
+    </Reference>
+    
     <EmbeddedResource Include="assets/aplogo.png" />
   </ItemGroup>
 </Project>

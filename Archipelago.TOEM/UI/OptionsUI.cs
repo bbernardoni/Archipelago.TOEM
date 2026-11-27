@@ -13,6 +13,8 @@ public class OptionsUI
 {
     private static List<GameObject> apCategoryGameObjects;
 
+    private static bool cursorUnlocked = false;
+
     [HarmonyPostfix, HarmonyPatch(typeof(OptionsMenu), nameof(OptionsMenu.OnMenuInitialize))]
     public static void OnMenuInitialize_Postfix(OptionsMenu __instance)
     {
@@ -69,6 +71,10 @@ public class OptionsUI
             // Options
             apCategoryGameObjects = [];
             
+            __instance.AddOptionsDivider(NewLocString("AP/Options/UI", "UI options"), (OptionsMenu.OptionsCategory)2);
+            __instance.AddOptionsCommandToggle(NewLocString("AP/Options/CursorUnlock", "Unlock Cursor"), "Unlock Cursor", 
+                (OptionsMenu.OptionsCategory)2, (Il2CppSystem.Action<bool>)UnlockCursor, false);
+
             __instance.AddOptionsDivider(NewLocString("AP/Options/Save", "Save options"), (OptionsMenu.OptionsCategory)2);
             AddOptionsCommand(__instance, "Open Save Directory", "UI/button_select", 
                 (Il2CppSystem.Action<bool>)OpenSaveDir);
@@ -214,4 +220,38 @@ public class OptionsUI
             }
         }
     }
+  
+    [HarmonyPostfix, HarmonyPatch(typeof(OptionsMenu), nameof(OptionsMenu.SetCursorLockMode))]
+    public static void SetCursorLockMode()
+    {
+        if (cursorUnlocked)
+            Cursor.lockState = CursorLockMode.None;
+    }
+    
+    [HarmonyPostfix, HarmonyPatch(typeof(OptionsMenu), nameof(OptionsMenu.SetDisplayMode))]
+    public static void SetDisplayMode()
+    {
+        if (cursorUnlocked)
+            Cursor.lockState = CursorLockMode.None;
+    }
+
+    public static void UnlockCursor(bool state)
+    {
+        cursorUnlocked = state;
+        Cursor.lockState = cursorUnlocked? CursorLockMode.None: OptionsMenu.mouseLockModeValue;
+    }
+    
+#if DEBUG
+    [HarmonyPrefix, HarmonyPatch(typeof(UniverseLib.Input.CursorUnlocker), "Init")]
+    public static bool UniverseLibCursorUnlockerDisable()
+    {
+        return false;
+    }
+    
+    [HarmonyPrefix, HarmonyPatch(typeof(UniverseLib.Input.CursorUnlocker), "UpdateCursorControl")]
+    public static bool UniverseLibUpdateCursorControlDisable()
+    {
+        return false;
+    }
+#endif
 }
